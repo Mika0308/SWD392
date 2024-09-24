@@ -1,12 +1,12 @@
 import React from 'react';
 import { Text, View } from 'react-native';
 
-const FindScreen: React.FC = () => {
+const WalletScreen: React.FC = () => {
     return (
         <View>
-            <Text>Welcome to Find!</Text>
+            <Text>Welcome to Wallet!</Text>
         </View>
     );
 };
 
-export default FindScreen;
+export default WalletScreen;
