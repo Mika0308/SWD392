@@ -23,7 +23,6 @@ const LoginScreen: React.FC = () => {
             style={styles.background}
         >
             <View style={styles.overlay} />
-            {/* Blurred container for the form */}
             <BlurView intensity={90} style={styles.blurContainer}>
                 <Text style={styles.title}>{isRegistering ? 'Create Account' : 'Login'}</Text>
 
