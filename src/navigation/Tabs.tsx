@@ -1,11 +1,11 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialIcons } from '@expo/vector-icons';
-import HomeScreen from '../../screens/HomeScreen';
-import ChatScreen from '../../screens/ChatScreen';
-import SearchScreen from '../../screens/SearchScreen';
-import ProfileScreen from '../../screens/ProfileScreen';
-import WalletScreen from '../../screens/WalletScreen';
+import HomeScreen from '../screens/HomeScreen';
+import ChatScreen from '../screens/ChatScreen';
+import SearchScreen from '../screens/SearchScreen';
+import ProfileScreen from '../screens/ProfileScreen';
+import WalletScreen from '../screens/WalletScreen';
 import styles from './Tabs.module.css';
 
 type TabParamList = {
