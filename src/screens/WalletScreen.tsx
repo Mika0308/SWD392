@@ -73,6 +73,7 @@ const styles = StyleSheet.create({
         flex: 1,
         padding: 20,
         backgroundColor: '#f7f7f7',
+        marginTop: 35,
     },
     balanceContainer: {
         alignItems: 'center',

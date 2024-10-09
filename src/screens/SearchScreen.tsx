@@ -71,6 +71,7 @@ const styles = StyleSheet.create({
         flex: 1,
         padding: 16,
         backgroundColor: '#fff',
+        marginTop: 35,
     },
     searchInput: {
         height: 50,

@@ -1,32 +1,31 @@
-// App.tsx
 import React, { useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import Tabs from './src/navigation/Tabs';
+import { createStackNavigator } from '@react-navigation/stack';
+import Tabs from './src/component/navigation/Tabs';
 import LoginScreen from './src/screens/LoginScreen';
+import RegisterScreen from './src/screens/RegisterScreen';
+
+const Stack = createStackNavigator();
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Hardcoded credentials
-  const predefinedUsername = 'Coca';
-  const predefinedPassword = '12345';
-
-  const handleLogin = (username: string, password: string) => {
-    // Check if the entered credentials match the predefined ones
-    if (username === predefinedUsername && password === predefinedPassword) {
-      setIsAuthenticated(true); // Successful login
-    } else {
-      alert('Invalid credentials'); // Show error if credentials don't match
-    }
-  };
-
   return (
     <NavigationContainer>
-      {isAuthenticated ? (
-        <Tabs />  // Show Tabs after successful authentication
-      ) : (
-        <LoginScreen onLogin={handleLogin} />  // Show LoginScreen if not authenticated
-      )}
+      <Stack.Navigator>
+        <Stack.Screen
+          name="Login"
+          options={{ headerShown: false }}
+        >
+          {() => (isAuthenticated ? <Tabs /> : <LoginScreen />)}
+        </Stack.Screen>
+        <Stack.Screen
+          name="Register"
+          options={{ title: 'Register' }}
+        >
+          {() => <RegisterScreen />}
+        </Stack.Screen>
+      </Stack.Navigator>
     </NavigationContainer>
   );
 };

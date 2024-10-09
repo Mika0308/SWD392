@@ -1,17 +1,47 @@
-// LoginScreen.tsx
 import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { View, TextInput, TouchableOpacity, Text, StyleSheet, Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { AuthNavigationProp } from '../component/navigation/types'; // Adjust the import path as necessary
+import { host_main, API_LOGIN } from '../api/api'; // Import API constants
 
-interface Props {
-    onLogin: (username: string, password: string) => void;
-}
+interface Props { }
 
-const LoginScreen: React.FC<Props> = ({ onLogin }) => {
+const LoginScreen: React.FC<Props> = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
 
-    const handleLogin = () => {
-        onLogin(username, password);
+    const navigation = useNavigation<AuthNavigationProp>(); // Use the defined type for navigation
+
+    const handleLogin = async () => {
+        setLoading(true);
+        try {
+            const response = await fetch(`${host_main}${API_LOGIN}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, password }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Login failed');
+            }
+
+            const data = await response.json();
+
+            // Process server response
+            Alert.alert('Login Successful', `Welcome ${data.username}`);
+            navigation.navigate('Home'); // Navigate to Home after successful login
+        } catch (error: unknown) { // Explicitly type error as unknown
+            if (error instanceof Error) {
+                Alert.alert('Login Failed', error.message || 'An error occurred');
+            } else {
+                Alert.alert('Login Failed', 'An unknown error occurred'); // Fallback for non-Error exceptions
+            }
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -35,12 +65,18 @@ const LoginScreen: React.FC<Props> = ({ onLogin }) => {
                 placeholderTextColor="#888"
             />
 
-            <TouchableOpacity style={styles.button} onPress={handleLogin}>
-                <Text style={styles.buttonText}>Login</Text>
+            <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
+                <Text style={styles.buttonText}>{loading ? 'Logging in...' : 'Login'}</Text>
             </TouchableOpacity>
 
             <Text style={styles.footerText}>
-                Don't have an account? <Text style={styles.signupText}>Sign Up</Text>
+                Don't have an account?{' '}
+                <Text
+                    style={styles.signupText}
+                    onPress={() => navigation.navigate('Register')} // Navigate to RegisterScreen
+                >
+                    Sign Up
+                </Text>
             </Text>
         </View>
     );
