@@ -9,8 +9,8 @@ interface SearchItem {
 }
 
 const SearchScreen: React.FC = () => {
-    const [searchQuery, setSearchQuery] = useState<string>(''); // The search input value
-    const [filteredData, setFilteredData] = useState<SearchItem[]>([]); // The filtered results
+    const [searchQuery, setSearchQuery] = useState<string>('');
+    const [filteredData, setFilteredData] = useState<SearchItem[]>([]);
 
     // Sample data for searching
     const searchData: SearchItem[] = [
@@ -21,8 +21,6 @@ const SearchScreen: React.FC = () => {
         { id: 5, name: 'Toán Rời Rạc', description: 'Xây dựng nền tảng cho toán học rời rạc và ứng dụng.' },
     ];
 
-
-    // Handle search functionality
     const handleSearch = (query: string) => {
         setSearchQuery(query);
         if (query) {
@@ -45,7 +43,6 @@ const SearchScreen: React.FC = () => {
 
     return (
         <View style={styles.container}>
-            {/* Search Input */}
             <TextInput
                 style={styles.searchInput}
                 placeholder="Search for items..."
@@ -53,7 +50,6 @@ const SearchScreen: React.FC = () => {
                 onChangeText={handleSearch}
             />
 
-            {/* Display Search Results */}
             <FlatList
                 data={filteredData}
                 renderItem={renderSearchItem}

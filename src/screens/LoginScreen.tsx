@@ -1,17 +1,21 @@
 import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity, Text, StyleSheet, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { AuthNavigationProp } from '../component/navigation/types'; // Adjust the import path as necessary
-import { host_main, API_LOGIN } from '../api/api'; // Import API constants
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AuthNavigationProp } from '../component/navigation/types';
+import { host_main, API_LOGIN } from '../api/api';
+import { jwtDecode } from 'jwt-decode';
 
-interface Props { }
+interface Props {
+    onLoginSuccess: () => void;
+}
 
-const LoginScreen: React.FC<Props> = () => {
+const LoginScreen: React.FC<Props> = ({ onLoginSuccess }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const navigation = useNavigation<AuthNavigationProp>(); // Use the defined type for navigation
+    const navigation = useNavigation<AuthNavigationProp>();
 
     const handleLogin = async () => {
         setLoading(true);
@@ -30,14 +34,31 @@ const LoginScreen: React.FC<Props> = () => {
 
             const data = await response.json();
 
-            // Process server response
-            Alert.alert('Login Successful', `Welcome ${data.username}`);
-            navigation.navigate('Home'); // Navigate to Home after successful login
-        } catch (error: unknown) { // Explicitly type error as unknown
+            // Lưu token vào AsyncStorage
+            await AsyncStorage.setItem('accessToken', data.accessToken);
+
+            // Kiểm tra token
+            const token = await AsyncStorage.getItem('accessToken');
+            if (token) {
+                console.log('Token đã lưu:', token);
+
+                // Giải mã token
+                const decodedToken = jwtDecode<{ Id: string }>(token);
+                const userId = decodedToken.Id;
+                console.log('User ID:', userId);
+                // Lưu userId vào AsyncStorage
+                await AsyncStorage.setItem('userId', userId);
+                console.log('User ID đã được lưu:', userId);
+            } else {
+                console.log('Không tìm thấy token sau khi lưu');
+            }
+
+            onLoginSuccess();
+        } catch (error: unknown) {
             if (error instanceof Error) {
                 Alert.alert('Login Failed', error.message || 'An error occurred');
             } else {
-                Alert.alert('Login Failed', 'An unknown error occurred'); // Fallback for non-Error exceptions
+                Alert.alert('Login Failed', 'An unknown error occurred');
             }
         } finally {
             setLoading(false);
@@ -73,7 +94,7 @@ const LoginScreen: React.FC<Props> = () => {
                 Don't have an account?{' '}
                 <Text
                     style={styles.signupText}
-                    onPress={() => navigation.navigate('Register')} // Navigate to RegisterScreen
+                    onPress={() => navigation.navigate('Register')}
                 >
                     Sign Up
                 </Text>

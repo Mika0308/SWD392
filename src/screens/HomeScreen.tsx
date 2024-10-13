@@ -12,7 +12,6 @@ const HomeScreen: React.FC = () => {
 
     return (
         <View style={styles.screenContainer}>
-            {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity>
                     <FontAwesome name="bars" size={24} color="black" />

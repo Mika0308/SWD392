@@ -5,7 +5,6 @@ import { FontAwesome } from '@expo/vector-icons';
 const ChatScreen: React.FC = () => {
     return (
         <View style={styles.container}>
-            {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity>
                     <FontAwesome name="arrow-left" size={24} color="black" />
@@ -17,7 +16,6 @@ const ChatScreen: React.FC = () => {
                 </TouchableOpacity>
             </View>
 
-            {/* Search Input for Math Problems */}
             <View style={styles.searchContainer}>
                 <FontAwesome name="search" size={20} color="black" style={styles.searchIcon} />
                 <TextInput placeholder="Ask a math question..." style={styles.searchInput} />
@@ -26,7 +24,6 @@ const ChatScreen: React.FC = () => {
                 </TouchableOpacity>
             </View>
 
-            {/* Filter Section */}
             <View style={styles.filterContainer}>
                 <TouchableOpacity style={styles.filterButton}>
                     <FontAwesome name="filter" size={16} color="black" />
@@ -38,7 +35,6 @@ const ChatScreen: React.FC = () => {
                 </TouchableOpacity>
             </View>
 
-            {/* AI Response with Video Solutions */}
             <ScrollView style={styles.scrollContainer}>
                 {Array.from({ length: 4 }).map((_, index) => (
                     <View key={index} style={styles.responseCard}>

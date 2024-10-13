@@ -5,6 +5,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 // Define the param list for your stack navigator
 export type AuthStackParamList = {
   Home: undefined; // No params for Home
+  Tabs: undefined;
   Login: undefined;
   Register: undefined; // No params for Register
 };

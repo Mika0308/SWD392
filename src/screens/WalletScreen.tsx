@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, Button, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 
-// Define the type for a transaction
 interface Transaction {
     id: number;
     amount: number;

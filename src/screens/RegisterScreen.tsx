@@ -1,16 +1,22 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, TextInput, TouchableOpacity, Text, StyleSheet, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { AuthNavigationProp } from '../component/navigation/types'; // Adjust the import path as necessary
-import { host_main, API_REGISTER } from '../api/api'; // Import API constants
+import { AuthNavigationProp } from '../component/navigation/types';
+import { host_main, API_REGISTER } from '../api/api';
 
-const RegisterScreen: React.FC = () => {
-    const [username, setUsername] = useState('');
+interface Props {
+    onRegisterSuccess: () => void;
+}
+
+const RegisterScreen: React.FC<Props> = ({ onRegisterSuccess }) => {
+    const [fullname, setFullname] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [phoneNumber, setPhoneNumber] = useState('');
+    const [userName, setUserName] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const navigation = useNavigation<AuthNavigationProp>(); // Use the defined type for navigation
+    const navigation = useNavigation<AuthNavigationProp>();
 
     const handleRegister = async () => {
         setLoading(true);
@@ -20,17 +26,31 @@ const RegisterScreen: React.FC = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ username, email, password }),
+                body: JSON.stringify({
+                    fullname,
+                    email,
+                    password,
+                    phoneNumber,
+                    userName,
+                }),
             });
 
             if (!response.ok) {
-                throw new Error('Registration failed');
+                throw new Error(`Registration failed with status ${response.status}`);
             }
 
-            const data = await response.json();
-            Alert.alert('Registration Successful', `Welcome ${data.username}`);
-            navigation.navigate('Login'); // Navigate to LoginScreen after successful registration
-        } catch (error: unknown) {  // Explicitly typing error as unknown
+            // Check if there is a response body and then parse
+            const responseText = await response.text();
+            const data = responseText ? JSON.parse(responseText) : null;
+
+            // If there's no data, handle it appropriately
+            if (!data) {
+                throw new Error('No response data from server');
+            }
+
+            // Process server response
+            onRegisterSuccess();
+        } catch (error: unknown) {
             if (error instanceof Error) {
                 Alert.alert('Registration Failed', error.message || 'An error occurred');
             } else {
@@ -41,20 +61,25 @@ const RegisterScreen: React.FC = () => {
         }
     };
 
+
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Register</Text>
+            <Text style={styles.title}>Create an Account</Text>
+            <Text style={styles.subtitle}>Register to get started</Text>
+
             <TextInput
                 style={styles.input}
-                placeholder="Username"
-                value={username}
-                onChangeText={setUsername}
+                placeholder="Full Name"
+                value={fullname}
+                onChangeText={setFullname}
+                placeholderTextColor="#888"
             />
             <TextInput
                 style={styles.input}
                 placeholder="Email"
                 value={email}
                 onChangeText={setEmail}
+                placeholderTextColor="#888"
                 keyboardType="email-address"
             />
             <TextInput
@@ -63,14 +88,37 @@ const RegisterScreen: React.FC = () => {
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
+                placeholderTextColor="#888"
             />
+            <TextInput
+                style={styles.input}
+                placeholder="Phone Number"
+                value={phoneNumber}
+                onChangeText={setPhoneNumber}
+                placeholderTextColor="#888"
+                keyboardType="phone-pad"
+            />
+            <TextInput
+                style={styles.input}
+                placeholder="Username"
+                value={userName}
+                onChangeText={setUserName}
+                placeholderTextColor="#888"
+            />
+
             <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
-                {loading ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                    <Text style={styles.buttonText}>Register</Text>
-                )}
+                <Text style={styles.buttonText}>{loading ? 'Registering...' : 'Register'}</Text>
             </TouchableOpacity>
+
+            <Text style={styles.footerText}>
+                Already have an account?{' '}
+                <Text
+                    style={styles.loginText}
+                    onPress={() => navigation.navigate('Login')}
+                >
+                    Log In
+                </Text>
+            </Text>
         </View>
     );
 };
@@ -79,40 +127,52 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#f5f5f5',
         padding: 20,
-        backgroundColor: '#F5F5F5', // Light background color
     },
     title: {
-        fontSize: 30,
-        fontWeight: 'bold',
+        fontSize: 28,
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: 10,
+    },
+    subtitle: {
+        fontSize: 16,
+        color: '#666',
         marginBottom: 30,
-        textAlign: 'center',
-        color: '#333', // Darker text color for contrast
     },
     input: {
-        height: 55,
+        width: '100%',
+        height: 50,
         borderColor: '#ccc',
         borderWidth: 1,
-        borderRadius: 10,
+        borderRadius: 8,
         paddingHorizontal: 15,
-        marginBottom: 20,
+        marginVertical: 10,
         backgroundColor: '#fff',
-        fontSize: 16,
-        shadowColor: '#000', // Add shadow for depth
-        shadowOpacity: 0.1,
-        shadowRadius: 5,
-        elevation: 2, // Elevation for Android shadow
     },
     button: {
-        backgroundColor: '#007BFF', // Primary button color
-        paddingVertical: 15,
-        borderRadius: 10,
+        width: '100%',
+        height: 50,
+        backgroundColor: '#28a745',
+        borderRadius: 8,
+        justifyContent: 'center',
         alignItems: 'center',
+        marginVertical: 20,
     },
     buttonText: {
         color: '#fff',
         fontSize: 18,
-        fontWeight: 'bold',
+        fontWeight: '500',
+    },
+    footerText: {
+        fontSize: 14,
+        color: '#666',
+    },
+    loginText: {
+        color: '#007BFF',
+        fontWeight: '500',
     },
 });
 
