@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Settings } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import SettingsScreen from './SettingsScreen';
 // import { API_GET_USER_DETAIL } from '../api/api';
 
 interface Profile {
@@ -19,16 +20,25 @@ const ProfileScreen: React.FC = () => {
         const fetchProfile = async () => {
             try {
                 const id = await AsyncStorage.getItem('userId');
+                const token = await AsyncStorage.getItem('accessToken');
 
                 if (!id) {
                     console.log('Không tìm thấy userId trong AsyncStorage');
                     return;
                 }
 
-                const response = await fetch(`https://mindmath.azurewebsites.net/api/users/${id}`);
+                const response = await fetch(`https://mindmath.azurewebsites.net/api/users/${id}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
+
                 const data = await response.json();
                 setProfile({
                     fullname: data.fullname,
@@ -77,7 +87,7 @@ const ProfileScreen: React.FC = () => {
                     <MaterialIcons name="privacy-tip" size={20} color="blue" />
                     <Text style={styles.optionText}>Privacy Policy</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.option}>
+                <TouchableOpacity style={styles.option} onPress={SettingsScreen}>
                     <MaterialIcons name="settings" size={20} color="blue" />
                     <Text style={styles.optionText}>Settings</Text>
                 </TouchableOpacity>

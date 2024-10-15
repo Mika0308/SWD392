@@ -40,7 +40,7 @@ const LoginScreen: React.FC<Props> = ({ onLoginSuccess }) => {
             // Kiểm tra token
             const token = await AsyncStorage.getItem('accessToken');
             if (token) {
-                console.log('Token đã lưu:', token);
+                console.log('Token saved:', token);
 
                 // Giải mã token
                 const decodedToken = jwtDecode<{ Id: string }>(token);
@@ -48,9 +48,9 @@ const LoginScreen: React.FC<Props> = ({ onLoginSuccess }) => {
                 console.log('User ID:', userId);
                 // Lưu userId vào AsyncStorage
                 await AsyncStorage.setItem('userId', userId);
-                console.log('User ID đã được lưu:', userId);
+                console.log('User ID saved:', userId);
             } else {
-                console.log('Không tìm thấy token sau khi lưu');
+                console.log('Can not find token');
             }
 
             onLoginSuccess();

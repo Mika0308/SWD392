@@ -35,21 +35,16 @@ const RegisterScreen: React.FC<Props> = ({ onRegisterSuccess }) => {
                 }),
             });
 
-            if (!response.ok) {
+            // Check if the response is successful (status 200-299)
+            if (response.status === 201) {
+                // Registration was successful (no response body expected)
+                onRegisterSuccess();
+                // Navigate to the Login screen
+                navigation.navigate('Login');
+            } else {
                 throw new Error(`Registration failed with status ${response.status}`);
             }
 
-            // Check if there is a response body and then parse
-            const responseText = await response.text();
-            const data = responseText ? JSON.parse(responseText) : null;
-
-            // If there's no data, handle it appropriately
-            if (!data) {
-                throw new Error('No response data from server');
-            }
-
-            // Process server response
-            onRegisterSuccess();
         } catch (error: unknown) {
             if (error instanceof Error) {
                 Alert.alert('Registration Failed', error.message || 'An error occurred');
@@ -60,7 +55,6 @@ const RegisterScreen: React.FC<Props> = ({ onRegisterSuccess }) => {
             setLoading(false);
         }
     };
-
 
     return (
         <View style={styles.container}>

@@ -5,7 +5,7 @@ import Tabs from './src/component/navigation/Tabs';
 import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
 import Toast from 'react-native-toast-message';
-import { showToast } from './src/component/notification/Toast'; // Adjust the path to where showToast is defined
+import { showToast } from './src/component/notification/Toast';
 
 const Stack = createStackNavigator();
 
