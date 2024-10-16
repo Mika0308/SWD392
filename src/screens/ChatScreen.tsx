@@ -10,14 +10,21 @@ interface FilterItem {
 
 const AITool: React.FC = () => {
     const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
-    const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
+    const [selectedChapter, setSelectedChapter] = useState<string | null>(null);
+    const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [filters, setFilters] = useState<FilterItem[]>([]);
     const [chapters, setChapters] = useState<FilterItem[]>([]);
+    const [topics, setTopics] = useState<FilterItem[]>([]);
+    const [problemTypes, setProblemTypes] = useState<FilterItem[]>([]);
     const [chapterLoading, setChapterLoading] = useState<boolean>(false);
+    const [topicLoading, setTopicLoading] = useState<boolean>(false);
+    const [problemTypeLoading, setProblemTypeLoading] = useState<boolean>(false);
     const [chapterError, setChapterError] = useState<string | null>(null);
+    const [topicError, setTopicError] = useState<string | null>(null);
+    const [problemTypeError, setProblemTypeError] = useState<string | null>(null);
 
     // Fetch subjects and handle errors
     const fetchSubjects = async () => {
@@ -84,23 +91,91 @@ const AITool: React.FC = () => {
         }
     };
 
+    // Fetch topics for a given chapter ID and handle errors
+    const fetchTopics = async (chapterId: string) => {
+        setTopicLoading(true);
+        setTopicError(null);
+
+        try {
+            const token = await AsyncStorage.getItem('accessToken');
+            const response = await fetch(`https://mindmath.azurewebsites.net/api/chapters/${chapterId}/topics/active`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            setTopics(data.map((item: any) => ({ id: item.id, name: item.name })));
+        } catch (error) {
+            console.error("Failed to fetch topics:", error);
+            setTopicError('Failed to fetch topics. Please try again later.');
+        } finally {
+            setTopicLoading(false);
+        }
+    };
+
+    // Fetch problem types for a given topic ID and handle errors
+    const fetchProblemTypes = async (topicId: string) => {
+        setProblemTypeLoading(true);
+        setProblemTypeError(null);
+
+        try {
+            const token = await AsyncStorage.getItem('accessToken');
+            const response = await fetch(`https://mindmath.azurewebsites.net/api/topics/${topicId}/problem-types/active`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            setProblemTypes(data.map((item: any) => ({ id: item.id, name: item.name })));
+        } catch (error) {
+            console.error("Failed to fetch problem types:", error);
+            setProblemTypeError('Failed to fetch problem types. Please try again later.');
+        } finally {
+            setProblemTypeLoading(false);
+        }
+    };
+
     // Handle subject selection and trigger chapter fetching
     const handleSubjectChange = (subjectId: string) => {
         setSelectedSubject(subjectId);
         fetchChapters(subjectId);  // Fetch chapters for the selected subject
+        setSelectedChapter(null);  // Reset the selected chapter when subject changes
+        setTopics([]);  // Clear topics when subject changes
+        setProblemTypes([]);  // Clear problem types when subject changes
+    };
+
+    // Handle chapter selection and trigger topic fetching
+    const handleChapterChange = (chapterId: string) => {
+        setSelectedChapter(chapterId);
+        fetchTopics(chapterId);  // Fetch topics for the selected chapter
+        setSelectedTopic(null);  // Reset the selected topic when chapter changes
+        setProblemTypes([]);  // Clear problem types when chapter changes
+    };
+
+    // Handle topic selection and trigger problem type fetching
+    const handleTopicChange = (topicId: string) => {
+        setSelectedTopic(topicId);
+        fetchProblemTypes(topicId);  // Fetch problem types for the selected topic
     };
 
     // Fetch subjects when the component mounts
     useEffect(() => {
         fetchSubjects();
     }, []);
-
-    // Handle search action
-    const handleSearch = () => {
-        console.log('Search query:', searchQuery);
-        console.log('Selected subject:', selectedFilters[0]);  // Assuming single subject selection
-        console.log('Selected chapters:', chapters);
-    };
 
     // UI Rendering
     if (loading) {
@@ -128,10 +203,10 @@ const AITool: React.FC = () => {
             <View style={styles.searchContainer}>
                 <TextInput
                     style={styles.searchInput}
-                    placeholder="Search subjects..."
+                    placeholder="Input your problem..."
                     value={searchQuery}
                     onChangeText={(text) => setSearchQuery(text)}
-                    onSubmitEditing={handleSearch}
+                    onSubmitEditing={() => console.log('Search query:', searchQuery)}
                 />
             </View>
             <Text style={styles.label}>Select Subject:</Text>
@@ -157,10 +232,58 @@ const AITool: React.FC = () => {
                         </View>
                     ) : (
                         <RNPickerSelect
-                            onValueChange={(value) => console.log('Chapter selected:', value)}
+                            onValueChange={(value) => handleChapterChange(value)}
                             items={chapters.map((chapter) => ({ label: chapter.name, value: chapter.id }))}
                             style={pickerSelectStyles}
                             placeholder={{ label: 'Select a chapter', value: null }}
+                            value={selectedChapter}
+                        />
+                    )}
+                </View>
+            )}
+
+            {selectedChapter && (
+                <View>
+                    <Text style={styles.label}>Select Topic:</Text>
+                    {topicLoading ? (
+                        <View style={styles.loadingContainer}>
+                            <ActivityIndicator size="small" color="#2196F3" />
+                            <Text>Loading topics...</Text>
+                        </View>
+                    ) : topicError ? (
+                        <View style={styles.errorContainer}>
+                            <Text style={styles.errorText}>{topicError}</Text>
+                        </View>
+                    ) : (
+                        <RNPickerSelect
+                            onValueChange={(value) => handleTopicChange(value)}
+                            items={topics.map((topic) => ({ label: topic.name, value: topic.id }))}
+                            style={pickerSelectStyles}
+                            placeholder={{ label: 'Select a topic', value: null }}
+                            value={selectedTopic}
+                        />
+                    )}
+                </View>
+            )}
+
+            {selectedTopic && (
+                <View>
+                    <Text style={styles.label}>Select Problem Type:</Text>
+                    {problemTypeLoading ? (
+                        <View style={styles.loadingContainer}>
+                            <ActivityIndicator size="small" color="#2196F3" />
+                            <Text>Loading problem types...</Text>
+                        </View>
+                    ) : problemTypeError ? (
+                        <View style={styles.errorContainer}>
+                            <Text style={styles.errorText}>{problemTypeError}</Text>
+                        </View>
+                    ) : (
+                        <RNPickerSelect
+                            onValueChange={(value) => console.log('Problem type selected:', value)}
+                            items={problemTypes.map((problemType) => ({ label: problemType.name, value: problemType.id }))}
+                            style={pickerSelectStyles}
+                            placeholder={{ label: 'Select a problem type', value: null }}
                         />
                     )}
                 </View>
@@ -186,7 +309,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         width: '90%',
         paddingVertical: 16,
-        // paddingHorizontal: 8,
     },
     headerTitle: {
         fontSize: 24,
