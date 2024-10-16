@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Settings } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import SettingsScreen from './SettingsScreen';
 // import { API_GET_USER_DETAIL } from '../api/api';
 
 interface Profile {
@@ -87,7 +86,7 @@ const ProfileScreen: React.FC = () => {
                     <MaterialIcons name="privacy-tip" size={20} color="blue" />
                     <Text style={styles.optionText}>Privacy Policy</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.option} onPress={SettingsScreen}>
+                <TouchableOpacity style={styles.option}>
                     <MaterialIcons name="settings" size={20} color="blue" />
                     <Text style={styles.optionText}>Settings</Text>
                 </TouchableOpacity>

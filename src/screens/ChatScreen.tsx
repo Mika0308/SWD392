@@ -1,55 +1,174 @@
-import React from 'react';
-import { Text, View, TextInput, ScrollView, StyleSheet, Image, TouchableOpacity } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import RNPickerSelect from 'react-native-picker-select';
 
-const ChatScreen: React.FC = () => {
+interface FilterItem {
+    id: string;
+    name: string;
+}
+
+const AITool: React.FC = () => {
+    const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+    const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
+    const [searchQuery, setSearchQuery] = useState<string>('');
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+    const [filters, setFilters] = useState<FilterItem[]>([]);
+    const [chapters, setChapters] = useState<FilterItem[]>([]);
+    const [chapterLoading, setChapterLoading] = useState<boolean>(false);
+    const [chapterError, setChapterError] = useState<string | null>(null);
+
+    // Fetch subjects and handle errors
+    const fetchSubjects = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const id = await AsyncStorage.getItem('userId');
+            const token = await AsyncStorage.getItem('accessToken');
+
+            if (!id) {
+                console.log('User ID not found in AsyncStorage');
+                setError('User ID not found. Please log in again.');
+                return;
+            }
+
+            const response = await fetch(`https://mindmath.azurewebsites.net/api/subjects/active`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            setFilters(data.map((item: any) => ({ id: item.id, name: item.name })));
+        } catch (error) {
+            console.error("Failed to fetch subjects:", error);
+            setError('Failed to fetch subjects. Please try again later.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Fetch chapters for a given subject ID and handle errors
+    const fetchChapters = async (subjectId: string) => {
+        setChapterLoading(true);
+        setChapterError(null);
+
+        try {
+            const token = await AsyncStorage.getItem('accessToken');
+            const response = await fetch(`https://mindmath.azurewebsites.net/api/subjects/${subjectId}/chapters/active`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            setChapters(data.map((item: any) => ({ id: item.id, name: item.name })));
+        } catch (error) {
+            console.error("Failed to fetch chapters:", error);
+            setChapterError('Failed to fetch chapters. Please try again later.');
+        } finally {
+            setChapterLoading(false);
+        }
+    };
+
+    // Handle subject selection and trigger chapter fetching
+    const handleSubjectChange = (subjectId: string) => {
+        setSelectedSubject(subjectId);
+        fetchChapters(subjectId);  // Fetch chapters for the selected subject
+    };
+
+    // Fetch subjects when the component mounts
+    useEffect(() => {
+        fetchSubjects();
+    }, []);
+
+    // Handle search action
+    const handleSearch = () => {
+        console.log('Search query:', searchQuery);
+        console.log('Selected subject:', selectedFilters[0]);  // Assuming single subject selection
+        console.log('Selected chapters:', chapters);
+    };
+
+    // UI Rendering
+    if (loading) {
+        return (
+            <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#2196F3" />
+                <Text>Loading subjects...</Text>
+            </View>
+        );
+    }
+
+    if (error) {
+        return (
+            <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>{error}</Text>
+            </View>
+        );
+    }
+
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <TouchableOpacity>
-                    <FontAwesome name="arrow-left" size={24} color="black" />
-                </TouchableOpacity>
                 <Text style={styles.headerTitle}>Math Solver AI</Text>
-                <TouchableOpacity style={styles.coinsButton}>
-                    <Text style={styles.coinsText}>10</Text>
-                    <FontAwesome name="dollar" size={20} color="black" />
-                </TouchableOpacity>
             </View>
-
             <View style={styles.searchContainer}>
-                <FontAwesome name="search" size={20} color="black" style={styles.searchIcon} />
-                <TextInput placeholder="Ask a math question..." style={styles.searchInput} />
-                <TouchableOpacity>
-                    <FontAwesome name="arrow-right" size={20} color="black" />
-                </TouchableOpacity>
+                <TextInput
+                    style={styles.searchInput}
+                    placeholder="Search subjects..."
+                    value={searchQuery}
+                    onChangeText={(text) => setSearchQuery(text)}
+                    onSubmitEditing={handleSearch}
+                />
             </View>
+            <Text style={styles.label}>Select Subject:</Text>
+            <RNPickerSelect
+                onValueChange={(value) => handleSubjectChange(value)}
+                items={filters.map((filter) => ({ label: filter.name, value: filter.id }))}
+                style={pickerSelectStyles}
+                placeholder={{ label: 'Select a subject', value: null }}
+                value={selectedSubject}
+            />
 
-            <View style={styles.filterContainer}>
-                <TouchableOpacity style={styles.filterButton}>
-                    <FontAwesome name="filter" size={16} color="black" />
-                    <Text style={styles.filterText}>Sort by Difficulty</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.filterButton}>
-                    <FontAwesome name="clock-o" size={16} color="black" />
-                    <Text style={styles.filterText}>Newest First</Text>
-                </TouchableOpacity>
-            </View>
-
-            <ScrollView style={styles.scrollContainer}>
-                {Array.from({ length: 4 }).map((_, index) => (
-                    <View key={index} style={styles.responseCard}>
-                        <Image source={{ uri: 'https://i.imgur.com/IpEsYSH.png' }} style={styles.videoThumbnail} />
-                        <View style={styles.responseTextContainer}>
-                            <Text style={styles.responseTitle}>Math Solution Video {index + 1}</Text>
-                            <Text style={styles.responseDescription}>AI-generated explanation for your math question</Text>
-                            <View style={styles.coinsInfo}>
-                                <Text style={styles.coinsTextSmall}>5</Text>
-                                <FontAwesome name="dollar" size={14} color="black" />
-                            </View>
+            {selectedSubject && (
+                <View>
+                    <Text style={styles.label}>Select Chapter:</Text>
+                    {chapterLoading ? (
+                        <View style={styles.loadingContainer}>
+                            <ActivityIndicator size="small" color="#2196F3" />
+                            <Text>Loading chapters...</Text>
                         </View>
-                    </View>
-                ))}
-            </ScrollView>
+                    ) : chapterError ? (
+                        <View style={styles.errorContainer}>
+                            <Text style={styles.errorText}>{chapterError}</Text>
+                        </View>
+                    ) : (
+                        <RNPickerSelect
+                            onValueChange={(value) => console.log('Chapter selected:', value)}
+                            items={chapters.map((chapter) => ({ label: chapter.name, value: chapter.id }))}
+                            style={pickerSelectStyles}
+                            placeholder={{ label: 'Select a chapter', value: null }}
+                        />
+                    )}
+                </View>
+            )}
+
+            <TouchableOpacity style={styles.generateButton} onPress={() => console.log('Generate Video')}>
+                <Text style={styles.generateButtonText}>Generate Video</Text>
+            </TouchableOpacity>
         </View>
     );
 };
@@ -57,81 +176,90 @@ const ChatScreen: React.FC = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
-        marginTop: 35,
+        backgroundColor: '#f9f9f9',
+        padding: 20,
+        marginTop: 20,
     },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: 16,
-        backgroundColor: '#e0f7fa',
+        width: '90%',
+        paddingVertical: 16,
+        // paddingHorizontal: 8,
     },
-    headerTitle: { fontSize: 20, fontWeight: 'bold' },
-    coinsButton: { flexDirection: 'row', alignItems: 'center' },
-    coinsText: { fontSize: 18, marginRight: 4 },
-
-    // Search Bar Styling
+    headerTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#000000',
+    },
+    label: {
+        fontSize: 16,
+        marginBottom: 10,
+        fontWeight: 'bold',
+        color: '#333',
+    },
+    loadingContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    errorContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    errorText: {
+        color: 'red',
+        fontSize: 18,
+    },
+    generateButton: {
+        backgroundColor: '#2196F3',
+        padding: 15,
+        borderRadius: 8,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 20,
+    },
+    generateButtonText: {
+        color: 'white',
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
     searchContainer: {
         flexDirection: 'row',
-        alignItems: 'center',
-        margin: 16,
-        borderColor: '#ccc',
-        borderWidth: 1,
+        marginBottom: 20,
+        backgroundColor: '#fff',
         borderRadius: 8,
-        padding: 8,
+        paddingHorizontal: 10,
+        elevation: 3,
     },
-    searchIcon: { marginRight: 8 },
-    searchInput: { flex: 1, fontSize: 16 },
-
-    // Filter Section Styling
-    filterContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        marginVertical: 10,
+    searchInput: {
+        flex: 1,
+        fontSize: 16,
+        paddingVertical: 10,
     },
-    filterButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 10,
-        borderColor: '#ccc',
-        borderWidth: 1,
-        borderRadius: 8,
-    },
-    filterText: {
-        marginLeft: 5,
-        fontSize: 14,
-    },
-
-    // Scroll Area with Video Responses
-    scrollContainer: { flex: 1, paddingHorizontal: 16 },
-    responseCard: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 16,
-        borderWidth: 1,
-        borderRadius: 8,
-        padding: 8,
-        borderColor: '#ccc',
-    },
-    videoThumbnail: { width: 80, height: 80, marginRight: 16 },
-    responseTextContainer: { flex: 1 },
-    responseTitle: { fontSize: 16, fontWeight: 'bold' },
-    responseDescription: { fontSize: 14, color: '#666', marginTop: 4 },
-
-    // Coins Info Styling
-    coinsInfo: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
-    coinsTextSmall: { fontSize: 14, marginRight: 4 },
-
-    // Bottom Navigation Bar Styling
-    bottomNavigation: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        padding: 16,
-        borderTopWidth: 1,
-        borderColor: '#ccc',
-    },
-    navButton: { alignItems: 'center' },
 });
 
-export default ChatScreen;
+const pickerSelectStyles = StyleSheet.create({
+    inputIOS: {
+        fontSize: 16,
+        paddingVertical: 12,
+        paddingHorizontal: 10,
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 8,
+        color: '#333',
+        paddingRight: 30,
+    },
+    inputAndroid: {
+        fontSize: 16,
+        paddingHorizontal: 10,
+        paddingVertical: 8,
+        borderWidth: 0.5,
+        borderColor: '#ccc',
+        borderRadius: 8,
+        color: '#333',
+        paddingRight: 30,
+    },
+});
+
+export default AITool;

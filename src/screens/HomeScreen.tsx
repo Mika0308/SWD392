@@ -1,16 +1,73 @@
-// HomeScreen.tsx
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import CardItem from '../component/card/CardItem';
+import SearchTool from '../component/tools/SearchTool';
 
 const HomeScreen: React.FC = () => {
+    const [userName, setProfileName] = useState<string | null>(null);
+    const [loading, setLoading] = useState<boolean>(true);
+
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const id = await AsyncStorage.getItem('userId');
+                const token = await AsyncStorage.getItem('accessToken');
+
+                if (!id) {
+                    console.log('Can not find userId trong AsyncStorage');
+                    return;
+                }
+
+                const response = await fetch(`https://mindmath.azurewebsites.net/api/users/${id}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                setProfileName(data.userName);
+            } catch (error) {
+                console.error("Failed to fetch user data:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProfile();
+    }, []);
+
+    const handleSearch = (query: string) => {
+        console.log('Searching for:', query);
+        // Add your search logic here
+    };
+
+    const handleFilterPress = () => {
+        // console.log('Filter button pressed');
+        // Add your filter logic here
+    };
+
     const cardItems = [
         { title: 'Cao Cấp 1', description: 'Bài toán cao cấp về giải tích.', imageUrl: 'https://i.pinimg.com/564x/9a/61/0d/9a610d643ff38384540a4ab15b21faa9.jpg' },
         { title: 'Cao Cấp 2', description: 'Bài toán cao cấp về giải tích.', imageUrl: 'https://i.pinimg.com/564x/c4/f3/03/c4f3031defd547795cbf7bca64173c6d.jpg' },
         { title: 'Toán Hình 1', description: 'Bài toán hình học cơ bản.', imageUrl: 'https://i.pinimg.com/564x/50/77/9f/50779f38c8cc9d7f44d3eebf2d67f0d9.jpg' },
         { title: 'Toán Hình 2', description: 'Bài toán hình học nâng cao.', imageUrl: 'https://i.pinimg.com/564x/ef/8a/ed/ef8aeda05b626ac8d4bf6c50154cc107.jpg' },
     ];
+
+    if (loading) {
+        return (
+            <View style={styles.loaderContainer}>
+                <ActivityIndicator size="large" color="blue" />
+            </View>
+        );
+    }
 
     return (
         <View style={styles.screenContainer}>
@@ -20,16 +77,17 @@ const HomeScreen: React.FC = () => {
                 </View>
                 <View style={styles.middleCard}>
                     <View style={styles.statusItem}>
-                        <Text style={styles.statusText}>24°C</Text>
-                        <Text style={styles.statusSubText}>avg house temp</Text>
+                        <Text style={styles.statusText}>{userName}</Text>
+                        <Text style={styles.statusSubText}>Welcome back!</Text>
                     </View>
                     <View style={styles.statusItem}>
-                        <Text style={styles.statusText}>69%</Text>
-                        <Text style={styles.statusSubText}>humidity</Text>
+                        <Text style={styles.statusText}>Coin:10$</Text>
+                        <Text style={styles.statusSubText}>balance</Text>
                     </View>
                 </View>
             </LinearGradient>
-            <View style={styles.container}>
+            <ScrollView style={styles.container}>
+                <SearchTool onSearch={handleSearch} onFilterPress={handleFilterPress} />
                 <Text style={styles.welcomeText}>Routines</Text>
                 {cardItems.map((item, index) => (
                     <CardItem
@@ -39,7 +97,7 @@ const HomeScreen: React.FC = () => {
                         imageUrl={item.imageUrl}
                     />
                 ))}
-            </View>
+            </ScrollView>
         </View>
     );
 };
@@ -101,6 +159,11 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#333',
         marginBottom: 16,
+    },
+    loaderContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
 });
 

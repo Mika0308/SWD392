@@ -14,6 +14,7 @@
     "@react-navigation/stack": "^6.4.1",
     "expo": "~51.0.36",
     "expo-blur": "^13.0.2",
+    "expo-linear-gradient": "~13.0.2",
     "expo-router": "^3.5.23",
     "expo-status-bar": "~1.12.1",
     "jsonwebtoken": "^9.0.2",
@@ -22,9 +23,10 @@
     "react-dom": "^18.2.0",
     "react-icons": "^4.12.0",
     "react-native": "0.74.5",
+    "react-native-picker-select": "^9.3.1",
     "react-native-snap-carousel": "^3.9.1",
     "react-native-toast-message": "^2.2.1",
-    "expo-linear-gradient": "~13.0.2"
+    "react-native-video": "^6.6.4"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
@@ -32,6 +34,7 @@
     "@types/jwt-decode": "^3.1.0",
     "@types/react": "~18.2.45",
     "@types/react-native-snap-carousel": "^3.8.11",
+    "expo-module-scripts": "^3.5.2",
     "typescript": "~5.3.3"
   },
   "private": true
