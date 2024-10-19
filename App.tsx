@@ -42,11 +42,11 @@ const App: React.FC = () => {
           name="Register"
           options={{ title: 'Register' }}
         >
-          {() => (
+          {({ navigation }) => (
             <RegisterScreen
               onRegisterSuccess={() => {
-                setIsAuthenticated(true);
                 showToast('Registration Successful', 'Welcome!', 'success');
+                navigation.navigate('Login');
               }}
             />
           )}
