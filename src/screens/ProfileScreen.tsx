@@ -3,6 +3,8 @@ import { View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator } fr
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
+import { AuthNavigationProp } from '../component/navigation/types';
 // import { API_GET_USER_DETAIL } from '../api/api';
 
 interface Profile {
@@ -15,6 +17,7 @@ interface Profile {
 const ProfileScreen: React.FC = () => {
     const [profile, setProfile] = useState<Profile | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
+    const navigation = useNavigation<AuthNavigationProp>();
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -76,21 +79,21 @@ const ProfileScreen: React.FC = () => {
                 <Text style={styles.profileEmail}>{profile?.email}</Text>
             </LinearGradient>
             <View style={styles.optionsContainer}>
-                <TouchableOpacity style={styles.option}>
+                <TouchableOpacity style={styles.option} onPress={() => navigation.navigate('Order')}>
                     <MaterialIcons name="history" size={20} color="blue" />
                     <Text style={styles.optionText}>Order History</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.option}>
+                <TouchableOpacity style={styles.option} onPress={() => navigation.navigate('Request')}>
                     <MaterialIcons name="request-page" size={20} color="blue" />
                     <Text style={styles.optionText}>Create Request</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.option}>
+                <TouchableOpacity style={styles.option} onPress={() => navigation.navigate('Rule')}>
                     <MaterialIcons name="privacy-tip" size={20} color="blue" />
                     <Text style={styles.optionText}>Privacy Policy</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.option}>
-                    <MaterialIcons name="settings" size={20} color="blue" />
-                    <Text style={styles.optionText}>Settings</Text>
+                <TouchableOpacity style={styles.option} onPress={() => navigation.navigate('Setting')}>
+                    <MaterialIcons name="person" size={20} color="blue" />
+                    <Text style={styles.optionText}>Profile</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.option}>
                     <MaterialIcons name="logout" size={20} color="blue" />

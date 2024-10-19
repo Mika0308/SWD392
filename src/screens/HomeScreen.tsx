@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CardItem from '../component/card/CardItem';
 import SearchTool from '../component/tools/SearchTool';
+// import Carousel from '../component/carousel/CarouselComponent';
 
 const HomeScreen: React.FC = () => {
     const [userName, setProfileName] = useState<string | null>(null);
@@ -88,6 +89,7 @@ const HomeScreen: React.FC = () => {
             </LinearGradient>
             <ScrollView style={styles.container}>
                 <SearchTool onSearch={handleSearch} onFilterPress={handleFilterPress} />
+                {/* <Carousel /> */}
                 <Text style={styles.welcomeText}>Routines</Text>
                 {cardItems.map((item, index) => (
                     <CardItem
