@@ -13,7 +13,7 @@ import OrderHistoryScreen from './src/screens/OrderHistoryScreen';
 import WalletScreen from './src/screens/WalletScreen';
 import Toast from 'react-native-toast-message';
 import { showToast } from './src/component/notification/Toast';
-
+import VNPayScreen from './src/screens/VNPayScreen';
 const Stack = createStackNavigator();
 
 const App: React.FC = () => {
@@ -57,6 +57,7 @@ const App: React.FC = () => {
         <Stack.Screen name="Order" component={OrderHistoryScreen} />
         <Stack.Screen name="Setting" component={SettingsScreen} />
         <Stack.Screen name="Wallet" component={WalletScreen} />
+        <Stack.Screen name="VNPay" component={VNPayScreen} />
       </Stack.Navigator>
       <Toast />
     </NavigationContainer>

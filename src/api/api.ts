@@ -58,3 +58,30 @@ export const API_UPDATE_PASSWORD = (userId: string) => `/api/users/${userId}/pas
 
 // Wallets
 export const API_GET_WALLET = (userId: string) => `/api/wallets/${userId}`;
+
+// Transactions
+export const API_CREATE_TRANSACTION = (userId: string) => `/api/transactions/create?userId=${userId}`;
+export const API_RETURN_URL = "/api/transactions/ReturnUrl";
+export const fetchWalletData = async (userId: string, token: string) => {
+    const walletResponse = await fetch(`${host_main}${API_GET_WALLET(userId)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!walletResponse.ok) {
+        throw new Error('Failed to fetch wallet data');
+    }
+
+    return await walletResponse.json();
+};
+
+export const fetchTransactions = async (userId: string, token: string) => {
+    const transactionsResponse = await fetch(`${host_main}${API_GET_USER_TRANSACTIONS(userId)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!transactionsResponse.ok) {
+        throw new Error('Failed to fetch transactions');
+    }
+
+    return await transactionsResponse.json();
+};
