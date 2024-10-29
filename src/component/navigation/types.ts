@@ -8,6 +8,7 @@ export type AuthStackParamList = {
   Tabs: undefined;
   Login: undefined;
   Register: undefined;
+  Wallet: undefined;
   Setting: undefined;
   Rule: undefined;
   Request: undefined;

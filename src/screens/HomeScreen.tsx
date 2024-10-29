@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CardItem from '../component/card/CardItem';
 import SearchTool from '../component/tools/SearchTool';
-import { MaterialIcons } from '@expo/vector-icons'; // Import MaterialIcons
+import { MaterialIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { AuthNavigationProp } from '../component/navigation/types';
 
 const HomeScreen: React.FC = () => {
     const [userName, setProfileName] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
+    const navigation = useNavigation<AuthNavigationProp>();
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -82,7 +85,9 @@ const HomeScreen: React.FC = () => {
                     </View>
                     <View style={styles.statusItem}>
                         <View style={styles.coinContainer}>
-                            <MaterialIcons name="monetization-on" size={24} color="gold" />
+                            <TouchableOpacity onPress={() => navigation.navigate('Wallet')}>
+                                <MaterialIcons name="monetization-on" size={24} color="gold" />
+                            </TouchableOpacity>
                             <Text style={styles.statusText}>10$</Text>
                         </View>
                         <Text style={styles.statusSubText}>balance</Text>

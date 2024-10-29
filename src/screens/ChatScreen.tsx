@@ -14,6 +14,7 @@ const AITool: React.FC = () => {
     const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
     const [selectedChapter, setSelectedChapter] = useState<string | null>(null);
     const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+    const [selectedProblemType, setSelectedProblemType] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
@@ -27,6 +28,9 @@ const AITool: React.FC = () => {
     const [chapterError, setChapterError] = useState<string | null>(null);
     const [topicError, setTopicError] = useState<string | null>(null);
     const [problemTypeError, setProblemTypeError] = useState<string | null>(null);
+    const [inputParameters, setInputParameters] = useState<FilterItem[]>([]);
+    const [inputParameterLoading, setInputParameterLoading] = useState<boolean>(false);
+    const [inputParameterError, setInputParameterError] = useState<string | null>(null);
     const [isModalVisible, setModalVisible] = useState<boolean>(false);  // Modal state
 
     // Fetch subjects and handle errors
@@ -152,6 +156,37 @@ const AITool: React.FC = () => {
         }
     };
 
+    // Modify fetchInputParameters to accept searchQuery
+    const fetchInputParameters = async (problemTypeId: string, userId: string, searchQuery: string) => {
+        setInputParameterLoading(true);
+        setInputParameterError(null);
+
+        try {
+            const token = await AsyncStorage.getItem('accessToken');
+
+            const response = await fetch(`https://mindmath.azurewebsites.net/api/problem-types/${problemTypeId}/users/${userId}/input-parameters`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({ query: searchQuery }) // Pass the search query here
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            setInputParameters(data.map((item: any) => ({ id: item.id, name: item.name })));
+        } catch (error) {
+            console.error("Failed to fetch input parameters:", error);
+            setInputParameterError('Failed to fetch input parameters. Please try again later.');
+        } finally {
+            setInputParameterLoading(false);
+        }
+    };
+
     // Handle subject selection and trigger chapter fetching
     const handleSubjectChange = (subjectId: string) => {
         setSelectedSubject(subjectId);
@@ -170,9 +205,17 @@ const AITool: React.FC = () => {
     };
 
     // Handle topic selection and trigger problem type fetching
-    const handleTopicChange = (topicId: string) => {
+    const handleTopicChange = async (topicId: string) => {
         setSelectedTopic(topicId);
         fetchProblemTypes(topicId);  // Fetch problem types for the selected topic
+    };
+
+    // Update handleProblemTypeChange to include searchQuery
+    const handleProblemTypeChange = async (problemTypeId: string) => {
+        const userId = await AsyncStorage.getItem('userId');
+        if (problemTypeId && userId) {
+            fetchInputParameters(problemTypeId, userId, searchQuery); // Pass searchQuery here
+        }
     };
 
     // Fetch subjects when the component mounts
@@ -229,7 +272,9 @@ const AITool: React.FC = () => {
                     placeholder="Input your problem..."
                     value={searchQuery}
                     onChangeText={(text) => setSearchQuery(text)}
-                    onSubmitEditing={() => console.log('Search query:', searchQuery)}
+                    onSubmitEditing={() => {
+                        if (selectedProblemType) handleProblemTypeChange(selectedProblemType);
+                    }}
                 />
             </View>
             <Text style={styles.label}>Select Subject:</Text>
@@ -308,6 +353,26 @@ const AITool: React.FC = () => {
                             style={pickerSelectStyles}
                             placeholder={{ label: 'Select a problem type', value: null }}
                         />
+                    )}
+                </View>
+            )}
+
+            {selectedProblemType && (
+                <View>
+                    <Text style={styles.label}>Input Parameters:</Text>
+                    {inputParameterLoading ? (
+                        <View style={styles.loadingContainer}>
+                            <ActivityIndicator size="small" color="#2196F3" />
+                            <Text>Loading input parameters...</Text>
+                        </View>
+                    ) : inputParameterError ? (
+                        <View style={styles.errorContainer}>
+                            <Text style={styles.errorText}>{inputParameterError}</Text>
+                        </View>
+                    ) : (
+                        inputParameters.map((param) => (
+                            <Text key={param.id}>{param.name}</Text>
+                        ))
                     )}
                 </View>
             )}

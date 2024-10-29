@@ -44,7 +44,7 @@ const Tabs: React.FC = () => {
             <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: 'Home' }} />
             {/* <Tab.Screen name="Search" component={SearchScreen} options={{ tabBarLabel: 'Search' }} /> */}
             <Tab.Screen name="Tool" component={ChatScreen} options={{ tabBarLabel: 'Tool' }} />
-            <Tab.Screen name="Wallet" component={WalletScreen} options={{ tabBarLabel: 'Wallet' }} />
+            {/* <Tab.Screen name="Wallet" component={WalletScreen} options={{ tabBarLabel: 'Wallet' }} /> */}
             {/* <Tab.Screen name="Wallet" component={WalletScreen} options={{ tabBarLabel: 'Wallet' }} /> */}
             <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: 'Profile' }} />
         </Tab.Navigator>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, Button, ActivityIndicator, Image, Alert } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Button, ActivityIndicator, Image, Alert, TouchableOpacity } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -78,7 +78,7 @@ const EditProfile = () => {
                     uri: image, // Ensure this is the correct URI from the image picker
                     type: 'image/jpeg', // Adjust based on your actual image type
                     name: 'profile.jpg', // Name for the file
-                } as unknown as Blob); // Type assertion to ensure TypeScript recognizes this
+                } as unknown as Blob);
             }
 
             // Append other fields
@@ -113,32 +113,45 @@ const EditProfile = () => {
 
     return (
         <View style={styles.container}>
-            <Button title="Pick an image from camera roll" onPress={pickImage} />
-            {image && <Image source={{ uri: image }} style={styles.image} />}
-            <TextInput
-                style={styles.input}
-                placeholder="Full Name"
-                value={fullname}
-                onChangeText={setFullname}
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Email"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Phone Number"
-                value={phoneNumber}
-                onChangeText={setPhoneNumber}
-                keyboardType="phone-pad"
-            />
+            <Text style={styles.title}>Your Profile</Text>
+            <View style={styles.profileImageContainer} >
+                <Button title="Pick an image from camera roll" onPress={pickImage} />
+                {image && <Image source={{ uri: image }} style={styles.image} />}
+            </View>
+
+            <View style={styles.inputContainer}>
+                <Text style={styles.label}>Name</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Full Name"
+                    value={fullname}
+                    onChangeText={setFullname}
+                />
+
+                <Text style={styles.label}>Phone Number</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Phone Number"
+                    value={phoneNumber}
+                    onChangeText={setPhoneNumber}
+                    keyboardType="phone-pad"
+                />
+
+                <Text style={styles.label}>Email</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Email"
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                />
+            </View>
             {loading ? (
-                <ActivityIndicator size="large" color="#2f95dc" />
+                <ActivityIndicator size="large" color="#2f95dc" style={styles.loading} />
             ) : (
-                <Button title="Save Profile" onPress={updateUserProfile} disabled={loading} />
+                <TouchableOpacity style={styles.saveButton} onPress={updateUserProfile}>
+                    <Text style={styles.buttonText}>Save Profile</Text>
+                </TouchableOpacity>
             )}
             {error && <Text style={styles.errorText}>{error}</Text>}
         </View>
@@ -252,9 +265,8 @@ const SettingsScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
         padding: 20,
+        backgroundColor: '#f7f7f7',
     },
     tabBar: {
         paddingBottom: 5,
@@ -263,17 +275,72 @@ const styles = StyleSheet.create({
     input: {
         width: '100%',
         height: 50,
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: '#ddd',
+        marginBottom: 20,
         paddingHorizontal: 10,
-        marginVertical: 10,
     },
     image: {
         width: 200,
         height: 200,
         borderRadius: 10,
         marginVertical: 10,
+    },
+    profileImageContainer: {
+        alignItems: 'center',
+        marginBottom: 30,
+    },
+    profileImage: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+    },
+    editIcon: {
+        position: 'absolute',
+        bottom: 0,
+        right: 10,
+        backgroundColor: '#2f95dc',
+        borderRadius: 20,
+        padding: 5,
+    },
+    editIconText: {
+        color: '#fff',
+        fontSize: 12,
+    },
+    inputContainer: {
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        padding: 20,
+        width: '100%',
+        elevation: 1,
+        shadowColor: '#000',
+        shadowOpacity: 0.1,
+        shadowOffset: { width: 0, height: 2 },
+        marginBottom: 20,
+    },
+    title: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        alignSelf: 'center',
+        marginBottom: 20,
+    },
+    saveButton: {
+        backgroundColor: '#2f95dc',
+        paddingVertical: 15,
+        paddingHorizontal: 30,
+        borderRadius: 10,
+        marginTop: 10,
+        width: '100%',
+        alignItems: 'center',
+    },
+    buttonText: {
+        color: '#fff',
+        fontWeight: '600',
+    },
+    label: {
+        fontSize: 14,
+        color: '#333',
+        marginBottom: 5,
     },
     errorText: {
         color: 'red',
@@ -282,6 +349,9 @@ const styles = StyleSheet.create({
     successText: {
         color: 'green',
         marginTop: 10,
+    },
+    loading: {
+        marginVertical: 20,
     },
 });
 
