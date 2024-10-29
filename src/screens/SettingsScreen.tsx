@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, Button, ActivityIndicator, Image, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Button, ActivityIndicator, Image, Alert, TouchableOpacity, ScrollView } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -112,7 +112,7 @@ const EditProfile = () => {
     };
 
     return (
-        <View style={styles.container}>
+        <ScrollView style={styles.container}>
             <Text style={styles.title}>Your Profile</Text>
             <View style={styles.profileImageContainer} >
                 <Button title="Pick an image from camera roll" onPress={pickImage} />
@@ -154,7 +154,7 @@ const EditProfile = () => {
                 </TouchableOpacity>
             )}
             {error && <Text style={styles.errorText}>{error}</Text>}
-        </View>
+        </ScrollView>
     );
 };
 
@@ -330,6 +330,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 30,
         borderRadius: 10,
         marginTop: 10,
+        marginBottom: 50,
         width: '100%',
         alignItems: 'center',
     },

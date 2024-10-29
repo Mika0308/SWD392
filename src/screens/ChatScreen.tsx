@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import RNPickerSelect from 'react-native-picker-select';
 import { Video, ResizeMode } from 'expo-av';
@@ -232,7 +232,7 @@ const AITool: React.FC = () => {
         setLoading(true);
         try {
             // Simulate video generation process
-            await new Promise((resolve) => setTimeout(resolve, 2000)); // Replace with actual video generation logic
+            await new Promise((resolve) => setTimeout(resolve, 7000)); // Replace with actual video generation logic
 
             // Open the modal with the video player
             toggleModal();
@@ -262,7 +262,7 @@ const AITool: React.FC = () => {
     }
 
     return (
-        <View style={styles.container}>
+        <ScrollView style={styles.container}>
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>Math Solver AI</Text>
             </View>
@@ -397,20 +397,20 @@ const AITool: React.FC = () => {
             <Modal isVisible={isModalVisible} onBackdropPress={toggleModal}>
                 <View style={styles.modalContent}>
                     <Video
-                        source={{ uri: 'https://www.w3schools.com/html/mov_bbb.mp4' }}
+                        source={{ uri: 'https://storage.googleapis.com/mindmath-56a26.appspot.com/videos/triangle_base_2.0_height_3.0_1730226181.mp4?Expires=1761762218&GoogleAccessId=firebase-adminsdk-gnrl1%40mindmath-56a26.iam.gserviceaccount.com&Signature=jqBW92HmSDwfKG1K1hB1LnEeY8NP22yyXi8Rm4L9kjYTtJ8c7Kk%2B9Pfwv%2BfAJWBFzRy8sSIAZ5k3FPbFoLnEX0ctj%2F5wJ2CzgRlpCZlECKadI9lS%2FSdI9zP1NVtJGZF2lDMu6uIwxvBK0sLI9Tf3C0%2FNTQflKP5eDketXSn%2FJEjyfoePzidSWP0ZztynoaxEFW2XMtZQCRt7vDlC8VSoiAsmJ7xRl2fCSv0YAt%2FHtl3tgQFOTPKUp9LLywto%2FJeIYt91nCGW%2FaCg5%2Bpa4RpT68TzLq9vuhd0vz7wNOucVmCrGCYkAx791S0bmGG9HXPdp88NFRnH68Ls6EWzNyq5Eg%3D%3D' }}
                         rate={1.0}
                         volume={1.0}
                         isMuted={false}
                         resizeMode={ResizeMode.COVER}
                         shouldPlay
-                        style={{ width: 300, height: 300 }}
+                        style={styles.video}
                     />
                     <TouchableOpacity style={styles.closeButton} onPress={toggleModal}>
                         <Text style={styles.closeButtonText}>Close</Text>
                     </TouchableOpacity>
                 </View>
             </Modal>
-        </View>
+        </ScrollView>
     );
 };
 
@@ -440,6 +440,7 @@ const styles = StyleSheet.create({
         color: '#333',
     },
     loadingContainer: {
+        flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -466,14 +467,14 @@ const styles = StyleSheet.create({
     },
     modalContent: {
         backgroundColor: 'white',
-        padding: 20,
         borderRadius: 10,
+        padding: 10,
         alignItems: 'center',
         justifyContent: 'center',
     },
-    videoPlayer: {
+    video: {
         width: 300,
-        height: 200,
+        height: 300,
     },
     closeButton: {
         marginTop: 10,
