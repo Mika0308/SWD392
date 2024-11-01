@@ -88,7 +88,7 @@ const HomeScreen: React.FC = () => {
                             <TouchableOpacity onPress={() => navigation.navigate('Wallet')}>
                                 <MaterialIcons name="monetization-on" size={24} color="gold" />
                             </TouchableOpacity>
-                            <Text style={styles.statusText}>10$</Text>
+                            <Text style={styles.statusText}>VND</Text>
                         </View>
                         <Text style={styles.statusSubText}>balance</Text>
                     </View>

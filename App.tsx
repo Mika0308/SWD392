@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
+import { NavigationContainer, LinkingOptions } from '@react-navigation/native';
+import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack';
+import { RouteProp } from '@react-navigation/native';
 import Tabs from './src/component/navigation/Tabs';
 import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
-// import HomeScreen from './src/screens/HomeScreen';
-// import ProfileScreen from './src/screens/ProfileScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import PrivacyPolicyScreen from './src/screens/PrivacyPolicyScreen';
 import CreateRequestScreen from './src/screens/CreateRequestScreen';
@@ -14,13 +13,51 @@ import WalletScreen from './src/screens/WalletScreen';
 import Toast from 'react-native-toast-message';
 import { showToast } from './src/component/notification/Toast';
 import VNPayScreen from './src/screens/VNPayScreen';
-const Stack = createStackNavigator();
 
+// Define type for navigation params for each screen
+type RootStackParamList = {
+  Login: undefined;
+  Register: undefined;
+  Rule: undefined;
+  Request: undefined;
+  Order: undefined;
+  Setting: undefined;
+  Wallet: undefined;
+  VNPay: { paymentUrl: string }; // VNPay requires paymentUrl as a parameter
+};
+
+// Define props type for VNPayScreen with navigation and route
+type VnPayScreenProps = {
+  navigation: StackNavigationProp<RootStackParamList, 'VNPay'>;
+  route: RouteProp<RootStackParamList, 'VNPay'>;
+};
+
+// Create a linking configuration for deep linking
+const linking: LinkingOptions<RootStackParamList> = {
+  prefixes: ['myapp://', 'https://myapp.com'],
+  config: {
+    screens: {
+      Login: 'login',
+      Register: 'register',
+      Rule: 'rule',
+      Request: 'request',
+      Order: 'order-history',
+      Setting: 'settings',
+      Wallet: 'wallet',
+      VNPay: 'vnpay/:paymentUrl',
+    },
+  },
+};
+
+// Create a stack navigator
+const Stack = createStackNavigator<RootStackParamList>();
+
+// Main App component
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   return (
-    <NavigationContainer>
+    <NavigationContainer linking={linking}>
       <Stack.Navigator>
         <Stack.Screen
           name="Login"
@@ -57,7 +94,11 @@ const App: React.FC = () => {
         <Stack.Screen name="Order" component={OrderHistoryScreen} />
         <Stack.Screen name="Setting" component={SettingsScreen} />
         <Stack.Screen name="Wallet" component={WalletScreen} />
-        <Stack.Screen name="VNPay" component={VNPayScreen} />
+        <Stack.Screen
+          name="VNPay"
+          component={VNPayScreen}
+          options={{ title: 'VNPay Payment' }}
+        />
       </Stack.Navigator>
       <Toast />
     </NavigationContainer>

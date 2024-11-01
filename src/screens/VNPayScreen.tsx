@@ -132,19 +132,25 @@
 import React, { useEffect } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { RouteProp, useNavigation } from '@react-navigation/native';
+import { RouteProp } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+
+type RootStackParamList = {
+    PaymentSuccessScreen: { responseCode: string; transactionNo: string };
+    VNPay: { paymentUrl: string };
+};
 
 interface VnPayScreenProps {
-    route: RouteProp<{ params: { paymentUrl: string } }, 'params'>;
+    route: RouteProp<RootStackParamList, 'VNPay'>;
+    navigation: StackNavigationProp<RootStackParamList, 'VNPay'>;
 }
 
-const VnPayScreen: React.FC<VnPayScreenProps> = ({ route }) => {
+const VnPayScreen: React.FC<VnPayScreenProps> = ({ route, navigation }) => {
     const { paymentUrl } = route.params;
-    const navigation = useNavigation();
 
     const onMessage = (event: any) => {
         const data = JSON.parse(event.nativeEvent.data);
-        
+
         if (data.vnp_ResponseCode === '200') {
             navigation.navigate('PaymentSuccessScreen', {
                 responseCode: data.vnp_ResponseCode,
@@ -157,8 +163,8 @@ const VnPayScreen: React.FC<VnPayScreenProps> = ({ route }) => {
 
     return (
         <View style={styles.container}>
-            <WebView 
-                source={{ uri: paymentUrl }} 
+            <WebView
+                source={{ uri: paymentUrl }}
                 onMessage={onMessage}
                 javaScriptEnabled={true}
                 domStorageEnabled={true}
