@@ -5,6 +5,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { AuthNavigationProp } from '../component/navigation/types';
+// import { useLogout } from '../component/navigation/logout';
 
 interface Profile {
     fullname: string;
@@ -17,6 +18,7 @@ const ProfileScreen: React.FC = () => {
     const [profile, setProfile] = useState<Profile | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const navigation = useNavigation<AuthNavigationProp>();
+    // const logout = useLogout();
 
     const fetchProfile = async () => {
         setLoading(true); // Set loading to true when fetching
@@ -72,6 +74,10 @@ const ProfileScreen: React.FC = () => {
             </View>
         );
     }
+    // const handleLogout = () => {
+    //     logout();
+    //     navigation.navigate('Login');
+    // };
 
     return (
         <View style={styles.container}>
@@ -85,6 +91,10 @@ const ProfileScreen: React.FC = () => {
                 <Text style={styles.profileEmail}>{profile?.email}</Text>
             </LinearGradient>
             <View style={styles.optionsContainer}>
+                <TouchableOpacity style={styles.option} onPress={() => navigation.navigate('Wallet')}>
+                    <MaterialIcons name="wallet" size={20} color="blue" />
+                    <Text style={styles.optionText}>Wallet</Text>
+                </TouchableOpacity>
                 <TouchableOpacity style={styles.option} onPress={() => navigation.navigate('Order')}>
                     <MaterialIcons name="history" size={20} color="blue" />
                     <Text style={styles.optionText}>Order History</Text>
@@ -101,6 +111,7 @@ const ProfileScreen: React.FC = () => {
                     <MaterialIcons name="person" size={20} color="blue" />
                     <Text style={styles.optionText}>Profile</Text>
                 </TouchableOpacity>
+                {/* <TouchableOpacity style={styles.option} onPress={handleLogout}> */}
                 <TouchableOpacity style={styles.option}>
                     <MaterialIcons name="logout" size={20} color="blue" />
                     <Text style={styles.optionText}>Log out</Text>

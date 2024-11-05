@@ -31,7 +31,10 @@ const AITool: React.FC = () => {
     const [inputParameters, setInputParameters] = useState<FilterItem[]>([]);
     const [inputParameterLoading, setInputParameterLoading] = useState<boolean>(false);
     const [inputParameterError, setInputParameterError] = useState<string | null>(null);
-    const [isModalVisible, setModalVisible] = useState<boolean>(false);  // Modal state
+    const [isModalVisible, setModalVisible] = useState<boolean>(false);
+    const [inputValues, setInputValues] = useState({}); // To store input values
+    const [userId, setUserId] = useState<string>(''); // State for userId
+    const [problemTypeId, setProblemTypeId] = useState<string>(''); // State for problemTypeId
 
     // Fetch subjects and handle errors
     const fetchSubjects = async () => {
@@ -187,6 +190,29 @@ const AITool: React.FC = () => {
         }
     };
 
+    const getSolution = async (inputParameterId: string) => {
+        try {
+            const token = await AsyncStorage.getItem("token");
+            const response = await fetch(`https://mindmath.azurewebsites.net/api/solutions/${inputParameterId}`, {
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Failed to get solution: ${errorText}`);
+            }
+
+            const solution = await response.json();
+            return solution;
+        } catch (error) {
+            console.error("Error fetching solution:", error);
+            throw error;
+        }
+    };
+
     // Handle subject selection and trigger chapter fetching
     const handleSubjectChange = (subjectId: string) => {
         setSelectedSubject(subjectId);
@@ -226,6 +252,15 @@ const AITool: React.FC = () => {
     const toggleModal = () => {
         setModalVisible(!isModalVisible);  // Toggle modal visibility
     };
+
+    // Function to handle input changes
+    const handleInputChange = (paramId: string, value: string): void => {
+        setInputValues((prevValues) => ({
+            ...prevValues,
+            [paramId]: value,
+        }));
+    };
+
 
     // Placeholder function for when the video is generated
     const handleGenerateVideo = async () => {
@@ -348,8 +383,16 @@ const AITool: React.FC = () => {
                         </View>
                     ) : (
                         <RNPickerSelect
-                            onValueChange={(value) => console.log('Problem type selected:', value)}
-                            items={problemTypes.map((problemType) => ({ label: problemType.name, value: problemType.id }))}
+                            onValueChange={(value) => {
+                                console.log('Problem type selected:', value);
+                                setSelectedProblemType(value); // Update state to store the selected problem type
+                                // Optionally fetch input parameters based on the selected problem type
+                                fetchInputParameters(problemTypeId, userId, searchQuery);
+                            }}
+                            items={problemTypes.map((problemType) => ({
+                                label: problemType.name,
+                                value: problemType.id,
+                            }))}
                             style={pickerSelectStyles}
                             placeholder={{ label: 'Select a problem type', value: null }}
                         />
@@ -360,20 +403,16 @@ const AITool: React.FC = () => {
             {selectedProblemType && (
                 <View>
                     <Text style={styles.label}>Input Parameters:</Text>
-                    {inputParameterLoading ? (
-                        <View style={styles.loadingContainer}>
-                            <ActivityIndicator size="small" color="#2196F3" />
-                            <Text>Loading input parameters...</Text>
+                    {inputParameters.map((param) => (
+                        <View key={param.id} style={styles.inputContainer}>
+                            <Text>{param.name}</Text>
+                            <TextInput
+                                style={styles.input}
+                                onChangeText={(text) => handleInputChange(param.id, text)}
+                                placeholder={`Enter ${param.name}`}
+                            />
                         </View>
-                    ) : inputParameterError ? (
-                        <View style={styles.errorContainer}>
-                            <Text style={styles.errorText}>{inputParameterError}</Text>
-                        </View>
-                    ) : (
-                        inputParameters.map((param) => (
-                            <Text key={param.id}>{param.name}</Text>
-                        ))
-                    )}
+                    ))}
                 </View>
             )}
 
@@ -498,6 +537,15 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: 16,
         paddingVertical: 10,
+    },
+    inputContainer: {
+        marginBottom: 16,
+    },
+    input: {
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 4,
+        padding: 10,
     },
 });
 

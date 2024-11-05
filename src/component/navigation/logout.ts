@@ -1,22 +1,29 @@
-// logout.ts
-import AsyncStorage from '@react-native-async-storage/async-storage'; // Only if using AsyncStorage
-import { useNavigation } from '@react-navigation/native';
-import { AuthNavigationProp } from '../navigation/types';
+// import AsyncStorage from '@react-native-async-storage/async-storage';
+// import { useNavigation } from '@react-navigation/native';
 
-export const useLogout = () => {
-    const navigation = useNavigation<AuthNavigationProp>();
+// export const useLogout = () => {
+//     const navigation = useNavigation();
 
-    const logout = async () => {
-        try {
-            // Clear any stored user session or tokens
-            await AsyncStorage.removeItem('accessToken');
+//     const logout = async () => {
+//         try {
+//             // Xóa tất cả các thông tin người dùng đã lưu trong AsyncStorage
+//             // await AsyncStorage.removeItem('accessToken');
+//             // await AsyncStorage.removeItem('userId');
+//             // Xóa tất cả dữ liệu cần thiết (Bạn có thể thêm các key khác nếu cần thiết)
 
-            // Navigate back to the Login screen
-            navigation.navigate('Login');
-        } catch (error: unknown) {
-            throw new Error(error instanceof Error ? error.message : 'An unknown error occurred');
-        }
-    };
+//             // Kiểm tra xem token đã bị xóa chưa
+//             const token = await AsyncStorage.getItem('accessToken');
+//             if (!token) {
+//                 console.log('Token successfully removed');
+//             } else {
+//                 console.log('Failed to remove token');
+//             }
 
-    return logout;
-};
+//         } catch (error) {
+//             console.error('Logout error:', error);
+//             // Thông báo lỗi nếu có vấn đề khi logout
+//         }
+//     };
+
+//     return logout;
+// };

@@ -9,10 +9,12 @@ export type AuthStackParamList = {
   Login: undefined;
   Register: undefined;
   Wallet: undefined;
+  Chat: undefined;
   Setting: undefined;
   Rule: undefined;
   Request: undefined;
   Order: undefined;
+  Tool: undefined;
 };
 
 // Create a type for the stack navigation prop

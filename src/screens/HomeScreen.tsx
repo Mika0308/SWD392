@@ -6,12 +6,14 @@ import CardItem from '../component/card/CardItem';
 import SearchTool from '../component/tools/SearchTool';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { fetchWalletData } from '../api/walletApi';
 import { AuthNavigationProp } from '../component/navigation/types';
 
 const HomeScreen: React.FC = () => {
     const [userName, setProfileName] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const navigation = useNavigation<AuthNavigationProp>();
+    const [balance, setBalance] = useState<number>(0);
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -46,6 +48,29 @@ const HomeScreen: React.FC = () => {
         };
 
         fetchProfile();
+    }, []);
+
+    useEffect(() => {
+        const fetchWalletDataFromAPI = async () => {
+            try {
+                const userId = await AsyncStorage.getItem('userId');
+                const token = await AsyncStorage.getItem('accessToken');
+                if (!userId || !token) {
+                    console.log('User ID or access token is missing.');
+                    return;
+                }
+
+                // Fetch balance data
+                const walletData = await fetchWalletData(userId, token);
+                setBalance(walletData.balance);
+            } catch (error) {
+                console.error('Failed to fetch wallet data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchWalletDataFromAPI();
     }, []);
 
     const handleSearch = (query: string) => {
@@ -88,14 +113,31 @@ const HomeScreen: React.FC = () => {
                             <TouchableOpacity onPress={() => navigation.navigate('Wallet')}>
                                 <MaterialIcons name="monetization-on" size={24} color="gold" />
                             </TouchableOpacity>
-                            <Text style={styles.statusText}>VND</Text>
+                            <Text style={styles.statusText}>{balance} VND</Text>
                         </View>
                         <Text style={styles.statusSubText}>balance</Text>
                     </View>
                 </View>
             </LinearGradient>
             <ScrollView style={styles.container}>
+                {/* Add the new Coca frame here */}
+                <View style={styles.demoFrame}>
+                    <Text style={styles.titleText}>MindMath</Text>
+                    <Text style={styles.createText}>Creator</Text>
+                    <Text style={styles.desText}>Instantly turn your text inputs into publish-worthy math videos. Simplify the process, generate scripts, and add video clips with ease. Create professional math content at scale!</Text>
+
+                    <View style={styles.buttonContainer}>
+                        <TouchableOpacity style={styles.button1} onPress={() => navigation.navigate('Chat')}>
+                            <Text style={styles.buttonText}>Create Video</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.button2}>
+                            <Text style={styles.buttonText}>Browse Video</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+
                 <SearchTool onSearch={handleSearch} onFilterPress={handleFilterPress} />
+
                 <Text style={styles.welcomeText}>Featured</Text>
                 {cardItems.map((item, index) => (
                     <CardItem
@@ -153,10 +195,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     statusText: {
-        fontSize: 20,
+        fontSize: 15,
         fontWeight: 'bold',
         color: '#333',
-        marginLeft: 5, // Spacing between icon and text
+        marginLeft: 5,
     },
     statusSubText: {
         fontSize: 14,
@@ -177,6 +219,74 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+
+    // New style for the Coca frame
+    demoFrame: {
+        maxWidth: '100%',
+        height: 260,
+        backgroundColor: '#fff',
+        borderRadius: 20,
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+        shadowColor: '#000',
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 4 },
+        elevation: 5,
+    },
+    titleText: {
+        fontSize: 50,
+        fontWeight: 'bold',
+        color: '#4CC9FE',
+    },
+    createText: {
+        fontSize: 26,
+        fontWeight: 'bold',
+        color: '#333',
+    },
+    desText: {
+        fontSize: 15,
+        fontWeight: 'bold',
+        color: '#A6AEBF',
+        textAlign: 'center',
+        textAlignVertical: 'center',
+        paddingVertical: 10,
+        paddingHorizontal: 10,
+    },
+    buttonContainer: {
+        flexDirection: 'row', // Make buttons appear side by side
+        justifyContent: 'space-between', // Space between the buttons
+        width: '100%', // Make the button container take up full width
+        paddingHorizontal: 20, // Add horizontal padding to the buttons
+        marginTop: 'auto', // Push the buttons to the bottom of the screen
+        paddingVertical: 20,
+    },
+    button1: {
+        backgroundColor: '#7AB2D3',
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 20,
+        width: '45%',
+        alignItems: 'center',
+        borderWidth: 2, // Add border width
+        borderColor: '#7AB2D3', // Set border color (dark shade of button1)
+    },
+    button2: {
+        backgroundColor: '#C4E1F6',
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 20,
+        width: '45%',
+        alignItems: 'center',
+        borderWidth: 2, // Add border width
+        borderColor: '#C4E1F6', // Set border color (dark shade of button2)
+    },
+    buttonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
 });
 
