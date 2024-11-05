@@ -3,17 +3,17 @@ import { View, Text, Button, StyleSheet } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../App';
 
-type PaymentSuccessScreenNavigationProp = StackNavigationProp<RootStackParamList, 'PaymentSuccess'>;
+type PaymentFailScreenNavigationProp = StackNavigationProp<RootStackParamList, 'PaymentFail'>;
 
-type PaymentSuccessScreenProps = {
-  navigation: PaymentSuccessScreenNavigationProp;
+type PaymentFailScreenProps = {
+  navigation: PaymentFailScreenNavigationProp;
 };
 
-const PaymentSuccessScreen: React.FC<PaymentSuccessScreenProps> = ({ navigation }) => {
+const PaymentFailScreen: React.FC<PaymentFailScreenProps> = ({ navigation }) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.message}>Payment Successful!</Text>
-      <Button title="Go to Home" onPress={() => navigation.navigate('Home')} />
+      <Text style={styles.message}>Payment Failed.</Text>
+      <Button title="Retry Payment" onPress={() => navigation.navigate('VNPay')} />
     </View>
   );
 };
@@ -30,4 +30,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PaymentSuccessScreen;
+export default PaymentFailScreen;
