@@ -13,6 +13,8 @@ import WalletScreen from './src/screens/WalletScreen';
 import Toast from 'react-native-toast-message';
 import { showToast } from './src/component/notification/Toast';
 import VNPayScreen from './src/screens/VNPayScreen';
+import PaymentSuccessScreen from './src/screens/PaymentSuccessScreen';
+import PaymentFailScreen from './src/screens/PaymentFailScreen';
 
 // Define type for navigation params for each screen
 type RootStackParamList = {
@@ -23,8 +25,11 @@ type RootStackParamList = {
   Order: undefined;
   Setting: undefined;
   Wallet: undefined;
-  VNPay: { paymentUrl: string }; // VNPay requires paymentUrl as a parameter
+  VNPay: { paymentUrl: string };
+  PaymentSuccess: undefined; // Thêm màn hình PaymentSuccess
+  PaymentFail: undefined;     // Thêm màn hình PaymentFail
 };
+
 
 // Define props type for VNPayScreen with navigation and route
 type VnPayScreenProps = {
@@ -34,7 +39,7 @@ type VnPayScreenProps = {
 
 // Create a linking configuration for deep linking
 const linking: LinkingOptions<RootStackParamList> = {
-  prefixes: ['myapp://', 'https://myapp.com'],
+  prefixes: ['mindmath://', 'https://mindmath.com'],
   config: {
     screens: {
       Login: 'login',
@@ -45,6 +50,8 @@ const linking: LinkingOptions<RootStackParamList> = {
       Setting: 'settings',
       Wallet: 'wallet',
       VNPay: 'vnpay/:paymentUrl',
+      PaymentSuccess: 'payment-success',
+      PaymentFail: 'payment-fail',
     },
   },
 };
@@ -99,6 +106,17 @@ const App: React.FC = () => {
           component={VNPayScreen}
           options={{ title: 'VNPay Payment' }}
         />
+        <Stack.Screen
+            name="PaymentSuccess"
+            component={PaymentSuccessScreen}
+            options={{ title: 'Payment Success' }}
+          />
+          <Stack.Screen
+            name="PaymentFail"
+            component={PaymentFailScreen}
+            options={{ title: 'Payment Failed' }}
+          />
+
       </Stack.Navigator>
       <Toast />
     </NavigationContainer>

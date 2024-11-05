@@ -7,24 +7,28 @@ import SearchTool from '../component/tools/SearchTool';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { AuthNavigationProp } from '../component/navigation/types';
+import { fetchWalletData } from '../api/walletApi';
+import { formatCurrency } from '../utils/formatCurrency';
 
 const HomeScreen: React.FC = () => {
     const [userName, setProfileName] = useState<string | null>(null);
+    const [balance, setBalance] = useState<number>(0);
     const [loading, setLoading] = useState<boolean>(true);
     const navigation = useNavigation<AuthNavigationProp>();
 
     useEffect(() => {
-        const fetchProfile = async () => {
+        const fetchUserData = async () => {
             try {
                 const id = await AsyncStorage.getItem('userId');
                 const token = await AsyncStorage.getItem('accessToken');
 
-                if (!id) {
-                    console.log('Can not find userId trong AsyncStorage');
+                if (!id || !token) {
+                    console.log('Cannot find userId or token in AsyncStorage');
                     return;
                 }
 
-                const response = await fetch(`https://mindmath.azurewebsites.net/api/users/${id}`, {
+                // Fetch user profile
+                const profileResponse = await fetch(`https://mindmath.azurewebsites.net/api/users/${id}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -32,20 +36,24 @@ const HomeScreen: React.FC = () => {
                     },
                 });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                if (!profileResponse.ok) {
+                    throw new Error(`HTTP error! status: ${profileResponse.status}`);
                 }
 
-                const data = await response.json();
-                setProfileName(data.userName);
+                const profileData = await profileResponse.json();
+                setProfileName(profileData.userName);
+
+                // Fetch wallet data
+                const walletData = await fetchWalletData(id, token);
+                setBalance(walletData.balance);
             } catch (error) {
-                console.error("Failed to fetch user data:", error);
+                console.error("Failed to fetch data:", error);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchProfile();
+        fetchUserData();
     }, []);
 
     const handleSearch = (query: string) => {
@@ -74,26 +82,28 @@ const HomeScreen: React.FC = () => {
 
     return (
         <View style={styles.screenContainer}>
-            <LinearGradient colors={['#08C2FF', '#BCF2F6']} style={styles.headerBodyContainer}>
-                <View style={styles.header}>
-                    <Text style={styles.headerTitle}>MindMath</Text>
+        <LinearGradient colors={['#08C2FF', '#BCF2F6']} style={styles.headerBodyContainer}>
+            <View style={styles.header}>
+                <Text style={styles.headerTitle}>MindMath</Text>
+            </View>
+            <View style={styles.middleCard}>
+                <View style={styles.statusItem}>
+                    <Text style={styles.statusText}>{userName}</Text>
+                    <Text style={styles.statusSubText}>Welcome back!</Text>
                 </View>
-                <View style={styles.middleCard}>
-                    <View style={styles.statusItem}>
-                        <Text style={styles.statusText}>{userName}</Text>
-                        <Text style={styles.statusSubText}>Welcome back!</Text>
+                <View style={styles.statusItem}>
+                    <View style={styles.coinContainer}>
+                        <TouchableOpacity onPress={() => navigation.navigate('Wallet')}>
+                            <MaterialIcons name="monetization-on" size={24} color="gold" />
+                        </TouchableOpacity>
+                        <Text style={styles.statusText}>
+                            {formatCurrency(balance)} VND
+                        </Text>
                     </View>
-                    <View style={styles.statusItem}>
-                        <View style={styles.coinContainer}>
-                            <TouchableOpacity onPress={() => navigation.navigate('Wallet')}>
-                                <MaterialIcons name="monetization-on" size={24} color="gold" />
-                            </TouchableOpacity>
-                            <Text style={styles.statusText}>VND</Text>
-                        </View>
-                        <Text style={styles.statusSubText}>balance</Text>
-                    </View>
+                    <Text style={styles.statusSubText}>balance</Text>
                 </View>
-            </LinearGradient>
+            </View>
+        </LinearGradient>
             <ScrollView style={styles.container}>
                 <SearchTool onSearch={handleSearch} onFilterPress={handleFilterPress} />
                 <Text style={styles.welcomeText}>Featured</Text>
