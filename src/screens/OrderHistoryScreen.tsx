@@ -1,142 +1,441 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ActivityIndicator, Button, Modal, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Video, ResizeMode } from 'expo-av';
 
-// Updated mock order data
-const mockOrderData = [
-    {
-        id: 1,
-        title: "Algebra Workbook",
-        description: "A comprehensive workbook filled with exercises to master algebra concepts.",
-        image: "https://i.pinimg.com/564x/0f/0f/72/0f0f725ad5985516a180f1b6e02b36e0.jpg", // Replace with a real image URL
-        price: "$15.99",
-    },
-    {
-        id: 2,
-        title: "Geometry Set",
-        description: "A complete geometry set with protractor, compass, and ruler for accurate measurements.",
-        image: "https://i.pinimg.com/564x/0f/0f/72/0f0f725ad5985516a180f1b6e02b36e0.jpg", // Replace with a real image URL
-        price: "$12.99",
-    },
-    {
-        id: 3,
-        title: "Calculus Textbook",
-        description: "An in-depth textbook covering calculus fundamentals and advanced topics.",
-        image: "https://i.pinimg.com/564x/0f/0f/72/0f0f725ad5985516a180f1b6e02b36e0.jpg", // Replace with a real image URL
-        price: "$29.99",
-    },
-    {
-        id: 4,
-        title: "Statistics Reference Guide",
-        description: "A handy reference guide that explains key statistical concepts and formulas.",
-        image: "https://i.pinimg.com/564x/0f/0f/72/0f0f725ad5985516a180f1b6e02b36e0.jpg", // Replace with a real image URL
-        price: "$18.99",
-    },
-    {
-        id: 5,
-        title: "Math Puzzles Book",
-        description: "A fun collection of math puzzles that challenge and enhance problem-solving skills.",
-        image: "https://i.pinimg.com/564x/0f/0f/72/0f0f725ad5985516a180f1b6e02b36e0.jpg", // Replace with a real image URL
-        price: "$9.99",
-    },
-    {
-        id: 6,
-        title: "Graphing Calculator",
-        description: "A powerful graphing calculator that simplifies complex equations and functions.",
-        image: "https://i.pinimg.com/564x/0f/0f/72/0f0f725ad5985516a180f1b6e02b36e0.jpg", // Replace with a real image URL
-        price: "$89.99",
-    },
-    {
-        id: 7,
-        title: "Math Flashcards",
-        description: "A set of flashcards covering essential math concepts for quick learning and revision.",
-        image: "https://i.pinimg.com/564x/0f/0f/72/0f0f725ad5985516a180f1b6e02b36e0.jpg", // Replace with a real image URL
-        price: "$7.99",
-    },
-    {
-        id: 8,
-        title: "Trigonometry Handbook",
-        description: "A comprehensive handbook for mastering trigonometric identities and equations.",
-        image: "https://i.pinimg.com/564x/0f/0f/72/0f0f725ad5985516a180f1b6e02b36e0.jpg", // Replace with a real image URL
-        price: "$22.99",
-    },
-];
+// Define a type for the solution data
+interface Solution {
+    id: string;
+    link: string;
+    description: string;
+}
 
-const OrderHistoryScreen = () => {
-    const renderItem = ({ item }: { item: { title: string; description: string; image: string; price: string } }) => (
-        <View style={styles.card}>
-            <Image source={{ uri: item.image }} style={styles.image} />
-            <View style={styles.cardContent}>
-                <Text style={styles.title}>{item.title}</Text>
-                <Text style={styles.description}>{item.description}</Text>
-                <Text style={styles.price}>{item.price}</Text>
-            </View>
-        </View>
-    );
+const MyComponent = () => {
+    const [subjects, setSubjects] = useState<{ id: string, name: string }[]>([]);
+    const [chapters, setChapters] = useState<{ id: string, name: string }[]>([]);
+    const [topics, setTopics] = useState<{ id: string, name: string }[]>([]);
+    const [problemTypes, setProblemTypes] = useState<{ id: string, name: string }[]>([]);
+    const [inputParameters, setInputParameters] = useState<{ id: string, input: string, active: boolean }[]>([]);
+    const [solutions, setSolutions] = useState<Solution[]>([]);
+    const [isModalVisible, setIsModalVisible] = useState(false); // For toggling modal visibility
+    const [selectedSolution, setSelectedSolution] = useState<Solution | null>(null);
+
+    const [loading, setLoading] = useState(false);
+    const [chapterLoading, setChapterLoading] = useState(false);
+    const [topicLoading, setTopicLoading] = useState(false);
+    const [problemTypeLoading, setProblemTypeLoading] = useState(false);
+    const [inputLoading, setInputLoading] = useState(false);
+    const [solutionLoading, setSolutionLoading] = useState(false);
+
+    const [error, setError] = useState<string | null>(null);
+    const [chapterError, setChapterError] = useState<string | null>(null);
+    const [topicError, setTopicError] = useState<string | null>(null);
+    const [problemTypeError, setProblemTypeError] = useState<string | null>(null);
+    const [inputError, setInputError] = useState<string | null>(null);
+    const [solutionError, setSolutionError] = useState<string | null>(null);
+
+
+
+    const fetchSubjects = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const id = await AsyncStorage.getItem('userId');
+            const token = await AsyncStorage.getItem('accessToken');
+
+            if (!id) {
+                console.log('User ID not found in AsyncStorage');
+                setError('User ID not found. Please log in again.');
+                return;
+            }
+
+            const response = await fetch('https://mindmath.azurewebsites.net/api/subjects/active', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            setSubjects(data.map((item: any) => ({ id: item.id, name: item.name })));
+        } catch (error) {
+            console.error("Failed to fetch subjects:", error);
+            setError('Failed to fetch subjects. Please try again later.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchChapters = async (subjectId: string) => {
+        setChapterLoading(true);
+        setChapterError(null);
+
+        try {
+            const token = await AsyncStorage.getItem('accessToken');
+            const response = await fetch(`https://mindmath.azurewebsites.net/api/subjects/${subjectId}/chapters/active`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            setChapters(data.map((item: any) => ({ id: item.id, name: item.name })));
+        } catch (error) {
+            console.error("Failed to fetch chapters:", error);
+            setChapterError('Failed to fetch chapters. Please try again later.');
+        } finally {
+            setChapterLoading(false);
+        }
+    };
+
+    const fetchTopics = async (chapterId: string) => {
+        setTopicLoading(true);
+        setTopicError(null);
+
+        try {
+            const token = await AsyncStorage.getItem('accessToken');
+            const response = await fetch(`https://mindmath.azurewebsites.net/api/chapters/${chapterId}/topics/active`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            setTopics(data.map((item: any) => ({ id: item.id, name: item.name })));
+        } catch (error) {
+            console.error("Failed to fetch topics:", error);
+            setTopicError('Failed to fetch topics. Please try again later.');
+        } finally {
+            setTopicLoading(false);
+        }
+    };
+
+    const fetchProblemTypes = async (topicId: string) => {
+        setProblemTypeLoading(true);
+        setProblemTypeError(null);
+
+        try {
+            const token = await AsyncStorage.getItem('accessToken');
+            const response = await fetch(`https://mindmath.azurewebsites.net/api/topics/${topicId}/problem-types/active`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            setProblemTypes(data.map((item: any) => ({ id: item.id, name: item.name })));
+        } catch (error) {
+            console.error("Failed to fetch problem types:", error);
+            setProblemTypeError('Failed to fetch problem types. Please try again later.');
+        } finally {
+            setProblemTypeLoading(false);
+        }
+    };
+
+    const fetchInputParameters = async (problemTypeId: string) => {
+        setInputLoading(true);
+        setInputError(null);
+
+        try {
+            const userId = await AsyncStorage.getItem('userId');
+            const token = await AsyncStorage.getItem('accessToken');
+
+            if (!userId) {
+                console.log('User ID not found in AsyncStorage');
+                setInputError('User ID not found. Please log in again.');
+                return;
+            }
+
+            const response = await fetch(`https://mindmath.azurewebsites.net/api/problem-types/${problemTypeId}/users/${userId}/input-parameters/active`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            setInputParameters(data.map((item: any) => ({ id: item.id, input: item.input, active: item.active })));
+        } catch (error) {
+            console.error("Failed to fetch input parameters:", error);
+            setInputError('Failed to fetch input parameters. Please try again later.');
+        } finally {
+            setInputLoading(false);
+        }
+    };
+
+    const fetchSolution = async (inputParameterId: string) => {
+        setSolutionLoading(true);
+        setSolutionError(null);
+
+        try {
+            const token = await AsyncStorage.getItem('accessToken');
+            const response = await fetch(`https://mindmath.azurewebsites.net/api/solutions/${inputParameterId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            // Check if the data is an object and handle accordingly
+            if (data && data.id) {
+                // If data is a single object, put it in an array for rendering
+                setSolutions([{
+                    id: data.id,
+                    link: data.link,
+                    description: data.description,
+                }]);
+            } else {
+                // Handle the case where the expected data structure is not returned
+                setSolutionError('Failed to fetch solution. Data is not in the expected format.');
+            }
+        } catch (error) {
+            console.error("Failed to fetch solution:", error);
+            setSolutionError('Failed to fetch solution. Please try again later.');
+        } finally {
+            setSolutionLoading(false);
+        }
+    };
+
+    const handleSolutionPress = (solution: Solution) => {
+        setSelectedSolution(solution);
+        setIsModalVisible(true); // Show the modal
+    };
+
+    const toggleModal = () => {
+        setIsModalVisible(!isModalVisible); // Toggle modal visibility
+    };
+
+    const handleShowLink = (solutionLink: string) => {
+        Alert.alert('Video Link', solutionLink); // Displaying the video link in an alert
+    };
+
+    useEffect(() => {
+        fetchSubjects();
+    }, []);
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.header}>Order History</Text>
-            <FlatList
-                data={mockOrderData}
-                renderItem={renderItem}
-                keyExtractor={(item) => item.id.toString()}
-                contentContainerStyle={styles.list}
-            />
-        </View>
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+            <View style={styles.container}>
+                {loading && <ActivityIndicator size="large" color="#0000ff" />}
+                {error && <Text style={styles.errorText}>{error}</Text>}
+
+                <Text style={styles.sectionTitle}>Subjects</Text>
+                {subjects.map((subject) => (
+                    <TouchableOpacity
+                        key={subject.id}
+                        style={styles.card}
+                        onPress={() => fetchChapters(subject.id)}
+                    >
+                        <Text style={styles.cardText}>{subject.name}</Text>
+                    </TouchableOpacity>
+                ))}
+
+                {chapterLoading && <ActivityIndicator size="small" color="#0000ff" />}
+                {chapterError && <Text style={styles.errorText}>{chapterError}</Text>}
+
+                <Text style={styles.sectionTitle}>Chapters</Text>
+                {chapters.map((chapter) => (
+                    <TouchableOpacity
+                        key={chapter.id}
+                        style={styles.card}
+                        onPress={() => fetchTopics(chapter.id)}
+                    >
+                        <Text style={styles.cardText}>{chapter.name}</Text>
+                    </TouchableOpacity>
+                ))}
+
+                {topicLoading && <ActivityIndicator size="small" color="#0000ff" />}
+                {topicError && <Text style={styles.errorText}>{topicError}</Text>}
+
+                <Text style={styles.sectionTitle}>Topics</Text>
+                {topics.map((topic) => (
+                    <TouchableOpacity
+                        key={topic.id}
+                        style={styles.card}
+                        onPress={() => fetchProblemTypes(topic.id)}
+                    >
+                        <Text style={styles.cardText}>{topic.name}</Text>
+                    </TouchableOpacity>
+                ))}
+
+                {problemTypeLoading && <ActivityIndicator size="small" color="#0000ff" />}
+                {problemTypeError && <Text style={styles.errorText}>{problemTypeError}</Text>}
+
+                <Text style={styles.sectionTitle}>Problem Types</Text>
+                {problemTypes.map((problemType) => (
+                    <TouchableOpacity
+                        key={problemType.id}
+                        style={styles.card}
+                        onPress={() => fetchInputParameters(problemType.id)}
+                    >
+                        <Text style={styles.cardText}>{problemType.name}</Text>
+                    </TouchableOpacity>
+                ))}
+
+                {inputLoading && <ActivityIndicator size="small" color="#0000ff" />}
+                {inputError && <Text style={styles.errorText}>{inputError}</Text>}
+
+                <Text style={styles.sectionTitle}>Input Parameters</Text>
+                {inputParameters.map((input) => (
+                    <TouchableOpacity
+                        key={input.id}
+                        style={styles.card}
+                        onPress={() => fetchSolution(input.id)}
+                    >
+                        <Text style={styles.cardText}>{input.input}</Text>
+                    </TouchableOpacity>
+                ))}
+
+                {solutionLoading && <ActivityIndicator size="small" color="#0000ff" />}
+                {solutionError && <Text style={styles.errorText}>{solutionError}</Text>}
+
+                <Text style={styles.sectionTitle}>Solutions</Text>
+                {solutions.map((solution) => (
+                    <TouchableOpacity
+                        key={solution.id}
+                        style={styles.card}
+                        onPress={() => handleSolutionPress(solution)}
+                    >
+                        <Text style={styles.cardText}>{solution.description}</Text>
+                    </TouchableOpacity>
+                ))}
+
+                {/* Modal to show video */}
+                <Modal
+                    visible={isModalVisible}
+                    onRequestClose={toggleModal}
+                    animationType="slide"
+                >
+                    <View style={styles.modalContent}>
+                        {selectedSolution && (
+                            <>
+                                <Video
+                                    source={{ uri: selectedSolution.link }}
+                                    rate={1.0}
+                                    volume={1.0}
+                                    isMuted={false}
+                                    resizeMode={ResizeMode.COVER}
+                                    shouldPlay
+                                    style={styles.video}
+                                />
+                                {/* Button to show the link */}
+                                <TouchableOpacity style={styles.videoButton} onPress={() => handleShowLink(selectedSolution.link)}>
+                                    <Text style={styles.downloadButton}>Show Link</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={styles.closeButton} onPress={toggleModal}>
+                                    <Text style={styles.closeButtonText}>Close</Text>
+                                </TouchableOpacity>
+                            </>
+                        )}
+                    </View>
+                </Modal>
+            </View>
+        </ScrollView>
     );
 };
 
 const styles = StyleSheet.create({
+    scrollContainer: {
+        flexGrow: 1,
+        paddingBottom: 20, // Adds space at the bottom of the screen
+    },
     container: {
         flex: 1,
-        padding: 20,
-        backgroundColor: '#ffffff',
+        padding: 16,
+        backgroundColor: '#f4f4f4',
     },
-    header: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 20,
-    },
-    card: {
-        backgroundColor: '#f9f9f9',
-        borderRadius: 10,
-        padding: 15,
-        marginBottom: 15,
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 1,
-        },
-        shadowOpacity: 0.2,
-        shadowRadius: 1.41,
-        elevation: 2,
-    },
-    image: {
-        width: '100%',
-        height: 150,
-        borderRadius: 10,
-        marginBottom: 10,
-    },
-    cardContent: {
-        paddingVertical: 10,
-    },
-    title: {
+    sectionTitle: {
         fontSize: 18,
         fontWeight: 'bold',
+        marginTop: 20,
     },
-    description: {
-        fontSize: 14,
-        color: '#555',
+    card: {
+        padding: 15,
+        backgroundColor: '#fff',
+        marginTop: 10,
+        borderRadius: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+        elevation: 3,
     },
-    price: {
+    cardText: {
         fontSize: 16,
-        color: '#2f95dc',
-        fontWeight: 'bold',
-        marginTop: 5,
+        color: '#333',
     },
-    list: {
-        paddingBottom: 20,
+    errorText: {
+        color: 'red',
+        textAlign: 'center',
+        marginTop: 10,
+    },
+    video: {
+        width: '100%',
+        height: 300,
+    },
+    videoButton: {
+        padding: 10,
+        backgroundColor: '#00f',
+        borderRadius: 5,
+        marginTop: 10,
+    },
+    downloadButton: {
+        color: '#fff',
+        fontWeight: 'bold',
+        textAlign: 'center',
+    },
+    closeButton: {
+        marginTop: 20,
+        padding: 10,
+        backgroundColor: 'red',
+        borderRadius: 5,
+    },
+    closeButtonText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        textAlign: 'center',
+    },
+    modalContent: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'white',
     },
 });
 
-export default OrderHistoryScreen;
+export default MyComponent;

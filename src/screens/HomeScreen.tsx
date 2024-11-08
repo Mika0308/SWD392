@@ -83,10 +83,10 @@ const HomeScreen: React.FC = () => {
     };
 
     const cardItems = [
-        { title: 'Cao Cấp 1', description: 'Bài toán cao cấp về giải tích.', imageUrl: 'https://i.pinimg.com/564x/9a/61/0d/9a610d643ff38384540a4ab15b21faa9.jpg' },
-        { title: 'Cao Cấp 2', description: 'Bài toán cao cấp về giải tích.', imageUrl: 'https://i.pinimg.com/564x/c4/f3/03/c4f3031defd547795cbf7bca64173c6d.jpg' },
-        { title: 'Toán Hình 1', description: 'Bài toán hình học cơ bản.', imageUrl: 'https://i.pinimg.com/564x/50/77/9f/50779f38c8cc9d7f44d3eebf2d67f0d9.jpg' },
-        { title: 'Toán Hình 2', description: 'Bài toán hình học nâng cao.', imageUrl: 'https://i.pinimg.com/564x/ef/8a/ed/ef8aeda05b626ac8d4bf6c50154cc107.jpg' },
+        { title: 'Circles 1', description: 'Area of a Circle.', imageUrl: 'https://i.pinimg.com/564x/9a/61/0d/9a610d643ff38384540a4ab15b21faa9.jpg' },
+        { title: 'Circles 2', description: 'Circumference of a Circle.', imageUrl: 'https://i.pinimg.com/564x/c4/f3/03/c4f3031defd547795cbf7bca64173c6d.jpg' },
+        { title: 'Triangles 1', description: 'Area of a Triangles.', imageUrl: 'https://i.pinimg.com/564x/50/77/9f/50779f38c8cc9d7f44d3eebf2d67f0d9.jpg' },
+        { title: 'Triangles 2', description: 'Perimeter of a Triangles.', imageUrl: 'https://i.pinimg.com/564x/ef/8a/ed/ef8aeda05b626ac8d4bf6c50154cc107.jpg' },
     ];
 
     if (loading) {

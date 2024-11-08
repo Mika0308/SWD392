@@ -99,10 +99,10 @@ const ProfileScreen: React.FC = () => {
                     <MaterialIcons name="history" size={20} color="blue" />
                     <Text style={styles.optionText}>Order History</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.option} onPress={() => navigation.navigate('Request')}>
+                {/* <TouchableOpacity style={styles.option} onPress={() => navigation.navigate('Request')}>
                     <MaterialIcons name="request-page" size={20} color="blue" />
                     <Text style={styles.optionText}>Create Request</Text>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
                 <TouchableOpacity style={styles.option} onPress={() => navigation.navigate('Rule')}>
                     <MaterialIcons name="privacy-tip" size={20} color="blue" />
                     <Text style={styles.optionText}>Privacy Policy</Text>

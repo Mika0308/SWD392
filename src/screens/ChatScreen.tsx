@@ -10,11 +10,18 @@ interface FilterItem {
     name: string;
 }
 
+type ProblemType = {
+    id: string;
+    name: string;
+    description: string;
+    numberOfInputs: number;
+};
+
 const AITool: React.FC = () => {
     const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
     const [selectedChapter, setSelectedChapter] = useState<string | null>(null);
     const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
-    const [selectedProblemType, setSelectedProblemType] = useState<string | null>(null);
+    const [selectedProblemType, setSelectedProblemType] = useState<ProblemType | null>(null);
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
@@ -150,7 +157,8 @@ const AITool: React.FC = () => {
             }
 
             const data = await response.json();
-            setProblemTypes(data.map((item: any) => ({ id: item.id, name: item.name })));
+            // Set the full problem type object, not just id and numberOfInputs
+            setProblemTypes(data);  // Don't map it yet, keep the whole object
         } catch (error) {
             console.error("Failed to fetch problem types:", error);
             setProblemTypeError('Failed to fetch problem types. Please try again later.');
@@ -158,6 +166,7 @@ const AITool: React.FC = () => {
             setProblemTypeLoading(false);
         }
     };
+
 
     // Modify fetchInputParameters to accept searchQuery
     const fetchInputParameters = async (problemTypeId: string, userId: string, searchQuery: string) => {
@@ -237,17 +246,20 @@ const AITool: React.FC = () => {
     };
 
     // Update handleProblemTypeChange to include searchQuery
-    const handleProblemTypeChange = async (problemTypeId: string) => {
-        const userId = await AsyncStorage.getItem('userId');
-        if (problemTypeId && userId) {
-            fetchInputParameters(problemTypeId, userId, searchQuery); // Pass searchQuery here
-        }
+    const handleProblemTypeSelection = (problemType: ProblemType) => {
+        // Make sure you're passing the entire problem type object
+        setSelectedProblemType(problemType);
     };
+
 
     // Fetch subjects when the component mounts
     useEffect(() => {
         fetchSubjects();
     }, []);
+
+    useEffect(() => {
+    }, [selectedProblemType]);
+
 
     const toggleModal = () => {
         setModalVisible(!isModalVisible);  // Toggle modal visibility
@@ -261,6 +273,17 @@ const AITool: React.FC = () => {
         }));
     };
 
+    // Function to create input fields
+    const createInputs = (count: number) => {
+        return Array.from({ length: count }, (_, index) => (
+            <TextInput
+                key={index}
+                style={styles.searchInput}
+                placeholder={`Input ${index + 1}`}
+                onChangeText={(text) => console.log(`Input ${index + 1}: ${text}`)}  // Update this as needed for specific input handling
+            />
+        ));
+    };
 
     // Placeholder function for when the video is generated
     const handleGenerateVideo = async () => {
@@ -300,17 +323,6 @@ const AITool: React.FC = () => {
         <ScrollView style={styles.container}>
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>Math Solver AI</Text>
-            </View>
-            <View style={styles.searchContainer}>
-                <TextInput
-                    style={styles.searchInput}
-                    placeholder="Input your problem..."
-                    value={searchQuery}
-                    onChangeText={(text) => setSearchQuery(text)}
-                    onSubmitEditing={() => {
-                        if (selectedProblemType) handleProblemTypeChange(selectedProblemType);
-                    }}
-                />
             </View>
             <Text style={styles.label}>Select Subject:</Text>
             <RNPickerSelect
@@ -385,9 +397,7 @@ const AITool: React.FC = () => {
                         <RNPickerSelect
                             onValueChange={(value) => {
                                 console.log('Problem type selected:', value);
-                                setSelectedProblemType(value); // Update state to store the selected problem type
-                                // Optionally fetch input parameters based on the selected problem type
-                                fetchInputParameters(problemTypeId, userId, searchQuery);
+                                setSelectedProblemType(value);
                             }}
                             items={problemTypes.map((problemType) => ({
                                 label: problemType.name,
@@ -400,17 +410,17 @@ const AITool: React.FC = () => {
                 </View>
             )}
 
-            {selectedProblemType && (
+            {selectedProblemType && selectedProblemType.numberOfInputs > 0 && (
                 <View>
                     <Text style={styles.label}>Input Parameters:</Text>
-                    {inputParameters.map((param) => (
-                        <View key={param.id} style={styles.inputContainer}>
-                            <Text>{param.name}</Text>
-                            <TextInput
-                                style={styles.input}
-                                onChangeText={(text) => handleInputChange(param.id, text)}
-                                placeholder={`Enter ${param.name}`}
-                            />
+
+                    {/* Generate input fields based on the numberOfInputs of the selected problem type */}
+                    {createInputs(selectedProblemType.numberOfInputs).map((inputField, index) => (
+                        <View key={index} style={styles.inputContainer}>
+                            <Text>Input {index + 1}</Text>
+                            <View style={styles.searchContainer}>
+                                {inputField}
+                            </View>
                         </View>
                     ))}
                 </View>

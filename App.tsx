@@ -19,7 +19,7 @@ import { showToast } from './src/component/notification/Toast';
 import VNPayScreen from './src/screens/VNPayScreen';
 
 // Define type for navigation params for each screen
-type RootStackParamList = {
+export type RootStackParamList = {
   Base: undefined;
   Login: undefined;
   Register: undefined;
@@ -90,7 +90,7 @@ const App: React.FC = () => {
         </Stack.Screen>
         <Stack.Screen
           name="Register"
-          options={{ title: 'Register' }}
+          options={{ title: 'Register', headerShown: false }}
         >
           {({ navigation }) => (
             <RegisterScreen

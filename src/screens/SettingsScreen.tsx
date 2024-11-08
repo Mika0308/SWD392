@@ -9,6 +9,12 @@ type TabParamList = {
     EditProfile: undefined;
     ChangePassword: undefined;
 };
+interface Profile {
+    fullname: string;
+    email: string;
+    phoneNumber: string;
+    avatarUrl: string | null;
+}
 
 const Tab = createBottomTabNavigator<TabParamList>();
 
@@ -21,6 +27,7 @@ const ICONS: { [key in keyof TabParamList]: keyof typeof MaterialIcons.glyphMap 
 const EditProfile = () => {
     const [fullname, setFullname] = useState('');
     const [email, setEmail] = useState('');
+    const [profile, setProfile] = useState<Profile | null>(null);
     const [phoneNumber, setPhoneNumber] = useState('');
     const [image, setImage] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -45,6 +52,43 @@ const EditProfile = () => {
 
         if (!result.canceled) {
             setImage(result.assets[0].uri);
+        }
+    };
+
+    const fetchProfile = async () => {
+        setLoading(true); // Set loading to true when fetching
+        try {
+            const id = await AsyncStorage.getItem('userId');
+            const token = await AsyncStorage.getItem('accessToken');
+
+            if (!id) {
+                console.log('User ID not found in AsyncStorage');
+                return;
+            }
+
+            const response = await fetch(`https://mindmath.azurewebsites.net/api/users/${id}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            setProfile({
+                fullname: data.fullname,
+                email: data.email,
+                phoneNumber: data.phoneNumber,
+                avatarUrl: data.avatar || null,
+            });
+        } catch (error) {
+            console.error("Failed to fetch user data:", error);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -110,28 +154,30 @@ const EditProfile = () => {
             setLoading(false);
         }
     };
+    useEffect(() => {
+        fetchProfile();
+    }, []);
 
     return (
         <ScrollView style={styles.container}>
             <Text style={styles.title}>Your Profile</Text>
             <View style={styles.profileImageContainer} >
-                <Button title="Pick an image from camera roll" onPress={pickImage} />
                 {image && <Image source={{ uri: image }} style={styles.image} />}
+                <Button title="Pick an image from camera roll" onPress={pickImage} />
             </View>
 
             <View style={styles.inputContainer}>
                 <Text style={styles.label}>Name</Text>
                 <TextInput
                     style={styles.input}
-                    placeholder="Full Name"
+                    placeholder={profile?.fullname || "Full Name"}
                     value={fullname}
                     onChangeText={setFullname}
                 />
-
                 <Text style={styles.label}>Phone Number</Text>
                 <TextInput
                     style={styles.input}
-                    placeholder="Phone Number"
+                    placeholder={profile?.phoneNumber || "Phone Number"}
                     value={phoneNumber}
                     onChangeText={setPhoneNumber}
                     keyboardType="phone-pad"
@@ -140,7 +186,7 @@ const EditProfile = () => {
                 <Text style={styles.label}>Email</Text>
                 <TextInput
                     style={styles.input}
-                    placeholder="Email"
+                    placeholder={profile?.email || "Email"}
                     value={email}
                     onChangeText={setEmail}
                     keyboardType="email-address"
@@ -162,6 +208,7 @@ const EditProfile = () => {
 const ChangePassword = () => {
     const [oldPassword, setOldPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
@@ -171,19 +218,26 @@ const ChangePassword = () => {
         setError(null);
         setSuccess(null);
 
+        // Validate if new password matches confirm password
+        if (newPassword !== confirmPassword) {
+            setError("Passwords do not match");
+            setLoading(false);
+            return;
+        }
+
+        if (!oldPassword || !newPassword) {
+            setError('Please fill in all fields before submitting.');
+            setLoading(false);
+            return;
+        }
+
         try {
             const id = await AsyncStorage.getItem('userId');
             const token = await AsyncStorage.getItem('accessToken');
 
             if (!id || !token) {
-                console.log('User ID or Access Token not found in AsyncStorage');
                 setError('User ID or access token not found. Please log in again.');
-                return;
-            }
-
-            if (!oldPassword || !newPassword) {
-                console.log('Input values are not set');
-                setError('Please fill in all fields before submitting.');
+                setLoading(false);
                 return;
             }
 
@@ -205,12 +259,11 @@ const ChangePassword = () => {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
 
-            console.log("Password changed successfully.");
             setSuccess('Password changed successfully!');
             setOldPassword('');
             setNewPassword('');
+            setConfirmPassword('');
         } catch (error) {
-            console.error("Failed to change password:", error);
             setError('Failed to change password. Please try again later.');
         } finally {
             setLoading(false);
@@ -233,6 +286,13 @@ const ChangePassword = () => {
                 onChangeText={setNewPassword}
                 secureTextEntry={true}
             />
+            <TextInput
+                style={styles.input}
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry={true}
+            />
             {loading ? (
                 <ActivityIndicator size="large" color="#2f95dc" />
             ) : (
@@ -243,7 +303,6 @@ const ChangePassword = () => {
         </View>
     );
 };
-
 const SettingsScreen = () => {
     return (
         <Tab.Navigator screenOptions={({ route }) => ({
@@ -272,6 +331,16 @@ const styles = StyleSheet.create({
         paddingBottom: 5,
         height: 50,
     },
+    avatar: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        marginTop: 10,
+        marginBottom: 10,
+        borderWidth: 3,
+        borderColor: '#006BFF',
+        alignSelf: 'center',
+    },
     input: {
         width: '100%',
         height: 50,
@@ -289,6 +358,7 @@ const styles = StyleSheet.create({
     profileImageContainer: {
         alignItems: 'center',
         marginBottom: 30,
+        marginTop: 10,
     },
     profileImage: {
         width: 100,
@@ -322,7 +392,7 @@ const styles = StyleSheet.create({
         fontSize: 22,
         fontWeight: 'bold',
         alignSelf: 'center',
-        marginBottom: 20,
+        // marginBottom: 10,
     },
     saveButton: {
         backgroundColor: '#2f95dc',
