@@ -130,7 +130,7 @@ const HomeScreen: React.FC = () => {
                         <TouchableOpacity style={styles.button1} onPress={() => navigation.navigate('Chat')}>
                             <Text style={styles.buttonText}>Create Video</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.button2}>
+                        <TouchableOpacity style={styles.button2} onPress={() => navigation.navigate('Order')}>
                             <Text style={styles.buttonText}>Browse Video</Text>
                         </TouchableOpacity>
                     </View>

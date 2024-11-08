@@ -251,89 +251,120 @@ const MyComponent = () => {
     return (
         <ScrollView contentContainerStyle={styles.scrollContainer}>
             <View style={styles.container}>
+                {/* Show ActivityIndicator or error */}
                 {loading && <ActivityIndicator size="large" color="#0000ff" />}
                 {error && <Text style={styles.errorText}>{error}</Text>}
 
-                <Text style={styles.sectionTitle}>Subjects</Text>
-                {subjects.map((subject) => (
-                    <TouchableOpacity
-                        key={subject.id}
-                        style={styles.card}
-                        onPress={() => fetchChapters(subject.id)}
-                    >
-                        <Text style={styles.cardText}>{subject.name}</Text>
-                    </TouchableOpacity>
-                ))}
+                {/* Show Subjects after loading */}
+                {subjects.length > 0 && (
+                    <>
+                        <Text style={styles.sectionTitle}>Subjects</Text>
+                        {subjects.map((subject) => (
+                            <TouchableOpacity
+                                key={subject.id}
+                                style={styles.card}
+                                onPress={() => fetchChapters(subject.id)}
+                            >
+                                <Text style={styles.cardText}>{subject.name}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </>
+                )}
 
-                {chapterLoading && <ActivityIndicator size="small" color="#0000ff" />}
-                {chapterError && <Text style={styles.errorText}>{chapterError}</Text>}
+                {/* Show Chapters after loading */}
+                {chapters.length > 0 && (
+                    <>
+                        {chapterLoading && <ActivityIndicator size="small" color="#0000ff" />}
+                        {chapterError && <Text style={styles.errorText}>{chapterError}</Text>}
 
-                <Text style={styles.sectionTitle}>Chapters</Text>
-                {chapters.map((chapter) => (
-                    <TouchableOpacity
-                        key={chapter.id}
-                        style={styles.card}
-                        onPress={() => fetchTopics(chapter.id)}
-                    >
-                        <Text style={styles.cardText}>{chapter.name}</Text>
-                    </TouchableOpacity>
-                ))}
+                        <Text style={styles.sectionTitle}>Chapters</Text>
+                        {chapters.map((chapter) => (
+                            <TouchableOpacity
+                                key={chapter.id}
+                                style={styles.card}
+                                onPress={() => fetchTopics(chapter.id)}
+                            >
+                                <Text style={styles.cardText}>{chapter.name}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </>
+                )}
 
-                {topicLoading && <ActivityIndicator size="small" color="#0000ff" />}
-                {topicError && <Text style={styles.errorText}>{topicError}</Text>}
+                {/* Show Topics after loading */}
+                {topics.length > 0 && (
+                    <>
+                        {topicLoading && <ActivityIndicator size="small" color="#0000ff" />}
+                        {topicError && <Text style={styles.errorText}>{topicError}</Text>}
 
-                <Text style={styles.sectionTitle}>Topics</Text>
-                {topics.map((topic) => (
-                    <TouchableOpacity
-                        key={topic.id}
-                        style={styles.card}
-                        onPress={() => fetchProblemTypes(topic.id)}
-                    >
-                        <Text style={styles.cardText}>{topic.name}</Text>
-                    </TouchableOpacity>
-                ))}
+                        <Text style={styles.sectionTitle}>Topics</Text>
+                        {topics.map((topic) => (
+                            <TouchableOpacity
+                                key={topic.id}
+                                style={styles.card}
+                                onPress={() => fetchProblemTypes(topic.id)}
+                            >
+                                <Text style={styles.cardText}>{topic.name}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </>
+                )}
 
-                {problemTypeLoading && <ActivityIndicator size="small" color="#0000ff" />}
-                {problemTypeError && <Text style={styles.errorText}>{problemTypeError}</Text>}
+                {/* Show Problem Types after loading */}
+                {problemTypes.length > 0 && (
+                    <>
+                        {problemTypeLoading && <ActivityIndicator size="small" color="#0000ff" />}
+                        {problemTypeError && <Text style={styles.errorText}>{problemTypeError}</Text>}
 
-                <Text style={styles.sectionTitle}>Problem Types</Text>
-                {problemTypes.map((problemType) => (
-                    <TouchableOpacity
-                        key={problemType.id}
-                        style={styles.card}
-                        onPress={() => fetchInputParameters(problemType.id)}
-                    >
-                        <Text style={styles.cardText}>{problemType.name}</Text>
-                    </TouchableOpacity>
-                ))}
+                        <Text style={styles.sectionTitle}>Problem Types</Text>
+                        {problemTypes.map((problemType) => (
+                            <TouchableOpacity
+                                key={problemType.id}
+                                style={styles.card}
+                                onPress={() => fetchInputParameters(problemType.id)}
+                            >
+                                <Text style={styles.cardText}>{problemType.name}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </>
+                )}
 
-                {inputLoading && <ActivityIndicator size="small" color="#0000ff" />}
-                {inputError && <Text style={styles.errorText}>{inputError}</Text>}
+                {/* Show Input Parameters after loading */}
+                {inputParameters.length > 0 && (
+                    <>
+                        {inputLoading && <ActivityIndicator size="small" color="#0000ff" />}
+                        {inputError && <Text style={styles.errorText}>{inputError}</Text>}
 
-                <Text style={styles.sectionTitle}>Input Parameters</Text>
-                {inputParameters.map((input) => (
-                    <TouchableOpacity
-                        key={input.id}
-                        style={styles.card}
-                        onPress={() => fetchSolution(input.id)}
-                    >
-                        <Text style={styles.cardText}>{input.input}</Text>
-                    </TouchableOpacity>
-                ))}
+                        <Text style={styles.sectionTitle}>Input Parameters</Text>
+                        {inputParameters.map((input) => (
+                            <TouchableOpacity
+                                key={input.id}
+                                style={styles.card}
+                                onPress={() => fetchSolution(input.id)}
+                            >
+                                <Text style={styles.cardText}>{input.input}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </>
+                )}
 
-                {solutionLoading && <ActivityIndicator size="small" color="#0000ff" />}
-                {solutionError && <Text style={styles.errorText}>{solutionError}</Text>}
+                {/* Show Solutions after loading */}
+                {solutions.length > 0 && (
+                    <>
+                        {solutionLoading && <ActivityIndicator size="small" color="#0000ff" />}
+                        {solutionError && <Text style={styles.errorText}>{solutionError}</Text>}
 
-                <Text style={styles.sectionTitle}>Solutions</Text>
-                {solutions.map((solution) => (
-                    <TouchableOpacity
-                        key={solution.id}
-                        style={styles.card}
-                        onPress={() => handleSolutionPress(solution)}
-                    >
-                        <Text style={styles.cardText}>{solution.description}</Text>
-                    </TouchableOpacity>
-                ))}
+                        <Text style={styles.sectionTitle}>Solutions</Text>
+                        {solutions.map((solution) => (
+                            <TouchableOpacity
+                                key={solution.id}
+                                style={styles.card}
+                                onPress={() => handleSolutionPress(solution)}
+                            >
+                                <Text style={styles.cardText}>{solution.description}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </>
+                )}
 
                 {/* Modal to show video */}
                 <Modal

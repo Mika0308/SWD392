@@ -1,62 +1,54 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, Button, ActivityIndicator, TouchableOpacity, TextInput, ScrollView, StyleSheet, Alert, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import RNPickerSelect from 'react-native-picker-select';
 import { Video, ResizeMode } from 'expo-av';
-import Modal from 'react-native-modal';
-
-interface FilterItem {
-    id: string;
-    name: string;
-}
-
-type ProblemType = {
+interface ProblemType {
     id: string;
     name: string;
     description: string;
     numberOfInputs: number;
-};
+    active: boolean;
+}
 
-const AITool: React.FC = () => {
-    const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
-    const [selectedChapter, setSelectedChapter] = useState<string | null>(null);
-    const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
-    const [selectedProblemType, setSelectedProblemType] = useState<ProblemType | null>(null);
-    const [searchQuery, setSearchQuery] = useState<string>('');
-    const [loading, setLoading] = useState<boolean>(true);
+interface Solution {
+    id: string;
+    link: string;
+    description: string;
+}
+
+const AiTool = () => {
+    const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
-    const [filters, setFilters] = useState<FilterItem[]>([]);
-    const [chapters, setChapters] = useState<FilterItem[]>([]);
-    const [topics, setTopics] = useState<FilterItem[]>([]);
-    const [problemTypes, setProblemTypes] = useState<FilterItem[]>([]);
+    const [filters, setFilters] = useState<{ id: string, name: string }[]>([]);
     const [chapterLoading, setChapterLoading] = useState<boolean>(false);
-    const [topicLoading, setTopicLoading] = useState<boolean>(false);
-    const [problemTypeLoading, setProblemTypeLoading] = useState<boolean>(false);
     const [chapterError, setChapterError] = useState<string | null>(null);
+    const [chapters, setChapters] = useState<{ id: string, name: string }[]>([]);
+    const [topicLoading, setTopicLoading] = useState<boolean>(false);
     const [topicError, setTopicError] = useState<string | null>(null);
+    const [topics, setTopics] = useState<{ id: string, name: string }[]>([]);
+    const [problemTypeLoading, setProblemTypeLoading] = useState<boolean>(false);
     const [problemTypeError, setProblemTypeError] = useState<string | null>(null);
-    const [inputParameters, setInputParameters] = useState<FilterItem[]>([]);
-    const [inputParameterLoading, setInputParameterLoading] = useState<boolean>(false);
-    const [inputParameterError, setInputParameterError] = useState<string | null>(null);
-    const [isModalVisible, setModalVisible] = useState<boolean>(false);
-    const [inputValues, setInputValues] = useState({}); // To store input values
-    const [userId, setUserId] = useState<string>(''); // State for userId
-    const [problemTypeId, setProblemTypeId] = useState<string>(''); // State for problemTypeId
+    const [problemTypes, setProblemTypes] = useState<ProblemType[]>([]);
+    const [selectedProblemType, setSelectedProblemType] = useState<ProblemType | null>(null);
+    const [inputValues, setInputValues] = useState<string[]>([]);
+    const [inputLoading, setInputLoading] = useState<boolean>(false);
+    const [inputError, setInputError] = useState<string | null>(null);
+    const [inputParameterId, setInputParameterId] = useState<string | null>(null);
+    const [submittedInputs, setSubmittedInputs] = useState<{ id: string; input: string }[]>([]);
+    const [solutionData, setSolutionData] = useState(null);
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [solutions, setSolutions] = useState<Solution[]>([]);
+    const [selectedSolution, setSelectedSolution] = useState<Solution | null>(null);
+    const [solutionLoading, setSolutionLoading] = useState(false);
+    const [solutionError, setSolutionError] = useState<string | null>(null);
 
-    // Fetch subjects and handle errors
+
+    // Fetch subjects
     const fetchSubjects = async () => {
         setLoading(true);
         setError(null);
         try {
-            const id = await AsyncStorage.getItem('userId');
             const token = await AsyncStorage.getItem('accessToken');
-
-            if (!id) {
-                console.log('User ID not found in AsyncStorage');
-                setError('User ID not found. Please log in again.');
-                return;
-            }
-
             const response = await fetch(`https://mindmath.azurewebsites.net/api/subjects/active`, {
                 method: 'GET',
                 headers: {
@@ -65,10 +57,7 @@ const AITool: React.FC = () => {
                 },
             });
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const data = await response.json();
             setFilters(data.map((item: any) => ({ id: item.id, name: item.name })));
         } catch (error) {
@@ -79,7 +68,7 @@ const AITool: React.FC = () => {
         }
     };
 
-    // Fetch chapters for a given subject ID and handle errors
+    // Fetch chapters
     const fetchChapters = async (subjectId: string) => {
         setChapterLoading(true);
         setChapterError(null);
@@ -94,10 +83,7 @@ const AITool: React.FC = () => {
                 },
             });
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const data = await response.json();
             setChapters(data.map((item: any) => ({ id: item.id, name: item.name })));
         } catch (error) {
@@ -108,7 +94,7 @@ const AITool: React.FC = () => {
         }
     };
 
-    // Fetch topics for a given chapter ID and handle errors
+    // Fetch topics
     const fetchTopics = async (chapterId: string) => {
         setTopicLoading(true);
         setTopicError(null);
@@ -123,10 +109,7 @@ const AITool: React.FC = () => {
                 },
             });
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const data = await response.json();
             setTopics(data.map((item: any) => ({ id: item.id, name: item.name })));
         } catch (error) {
@@ -137,7 +120,7 @@ const AITool: React.FC = () => {
         }
     };
 
-    // Fetch problem types for a given topic ID and handle errors
+    // Fetch problem types
     const fetchProblemTypes = async (topicId: string) => {
         setProblemTypeLoading(true);
         setProblemTypeError(null);
@@ -152,13 +135,15 @@ const AITool: React.FC = () => {
                 },
             });
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const data = await response.json();
-            // Set the full problem type object, not just id and numberOfInputs
-            setProblemTypes(data);  // Don't map it yet, keep the whole object
+            setProblemTypes(data.map((item: any) => ({
+                id: item.id,
+                name: item.name,
+                description: item.description,
+                numberOfInputs: item.numberOfInputs,
+                active: item.active,
+            })));
         } catch (error) {
             console.error("Failed to fetch problem types:", error);
             setProblemTypeError('Failed to fetch problem types. Please try again later.');
@@ -167,296 +152,279 @@ const AITool: React.FC = () => {
         }
     };
 
-
-    // Modify fetchInputParameters to accept searchQuery
-    const fetchInputParameters = async (problemTypeId: string, userId: string, searchQuery: string) => {
-        setInputParameterLoading(true);
-        setInputParameterError(null);
-
-        try {
-            const token = await AsyncStorage.getItem('accessToken');
-
-            const response = await fetch(`https://mindmath.azurewebsites.net/api/problem-types/${problemTypeId}/users/${userId}/input-parameters`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify({ query: searchQuery }) // Pass the search query here
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            setInputParameters(data.map((item: any) => ({ id: item.id, name: item.name })));
-        } catch (error) {
-            console.error("Failed to fetch input parameters:", error);
-            setInputParameterError('Failed to fetch input parameters. Please try again later.');
-        } finally {
-            setInputParameterLoading(false);
-        }
-    };
-
-    const getSolution = async (inputParameterId: string) => {
-        try {
-            const token = await AsyncStorage.getItem("token");
-            const response = await fetch(`https://mindmath.azurewebsites.net/api/solutions/${inputParameterId}`, {
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Failed to get solution: ${errorText}`);
-            }
-
-            const solution = await response.json();
-            return solution;
-        } catch (error) {
-            console.error("Error fetching solution:", error);
-            throw error;
-        }
-    };
-
-    // Handle subject selection and trigger chapter fetching
-    const handleSubjectChange = (subjectId: string) => {
-        setSelectedSubject(subjectId);
-        fetchChapters(subjectId);  // Fetch chapters for the selected subject
-        setSelectedChapter(null);  // Reset the selected chapter when subject changes
-        setTopics([]);  // Clear topics when subject changes
-        setProblemTypes([]);  // Clear problem types when subject changes
-    };
-
-    // Handle chapter selection and trigger topic fetching
-    const handleChapterChange = (chapterId: string) => {
-        setSelectedChapter(chapterId);
-        fetchTopics(chapterId);  // Fetch topics for the selected chapter
-        setSelectedTopic(null);  // Reset the selected topic when chapter changes
-        setProblemTypes([]);  // Clear problem types when chapter changes
-    };
-
-    // Handle topic selection and trigger problem type fetching
-    const handleTopicChange = async (topicId: string) => {
-        setSelectedTopic(topicId);
-        fetchProblemTypes(topicId);  // Fetch problem types for the selected topic
-    };
-
-    // Update handleProblemTypeChange to include searchQuery
-    const handleProblemTypeSelection = (problemType: ProblemType) => {
-        // Make sure you're passing the entire problem type object
-        setSelectedProblemType(problemType);
-    };
-
-
-    // Fetch subjects when the component mounts
-    useEffect(() => {
-        fetchSubjects();
-    }, []);
-
-    useEffect(() => {
-    }, [selectedProblemType]);
-
-
-    const toggleModal = () => {
-        setModalVisible(!isModalVisible);  // Toggle modal visibility
-    };
-
-    // Function to handle input changes
-    const handleInputChange = (paramId: string, value: string): void => {
-        setInputValues((prevValues) => ({
-            ...prevValues,
-            [paramId]: value,
-        }));
-    };
-
-    // Function to create input fields
-    const createInputs = (count: number) => {
-        return Array.from({ length: count }, (_, index) => (
-            <TextInput
-                key={index}
-                style={styles.searchInput}
-                placeholder={`Input ${index + 1}`}
-                onChangeText={(text) => console.log(`Input ${index + 1}: ${text}`)}  // Update this as needed for specific input handling
-            />
-        ));
-    };
-
-    // Placeholder function for when the video is generated
-    const handleGenerateVideo = async () => {
+    // Fetch input parameters for the selected problem type
+    const submitInputParameters = async () => {
         setLoading(true);
         try {
-            // Simulate video generation process
-            await new Promise((resolve) => setTimeout(resolve, 7000)); // Replace with actual video generation logic
+            const userId = await AsyncStorage.getItem('userId');
+            const token = await AsyncStorage.getItem('accessToken');
+            const problemTypeId = selectedProblemType?.id;
 
-            // Open the modal with the video player
-            toggleModal();
+            if (!userId || !problemTypeId) {
+                throw new Error('User ID or Problem Type ID is missing. Please try again.');
+            }
+
+            // Convert userId to a string (if necessary)
+            const userIdString = userId.toString();  // Ensure userId is a string
+
+            // Create a string from input values
+            const inputString = inputValues.join(",");  // join inputs with commas (or another delimiter)
+
+            const response = await fetch(
+                `https://mindmath.azurewebsites.net/api/problem-types/${problemTypeId}/users/${userIdString}/input-parameters`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({ input: inputString }),  // Adjust body to match the expected format
+                }
+            );
+
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+            const data = await response.json();
+
+            // Assuming the API returns an object with an 'id' for the input parameter (not userId)
+            if (data && data.id) {
+                // Use the input parameter ID from the response (not the userId)
+                setSubmittedInputs([{ id: data.id, input: data.input }]); // Ensure id is the correct input ID
+
+                // Alert with the correct ID and inputs
+                Alert.alert("Submitted Inputs", `Input ID: ${data.id}, Inputs: ${inputString}`);
+            }
+
         } catch (error) {
-            console.error("Error generating video:", error);
+            console.error("Failed to submit input parameters:", error);
+            Alert.alert("Error", 'Failed to submit input parameters. Please try again later.');
         } finally {
             setLoading(false);
         }
     };
 
-    // UI Rendering
-    if (loading) {
-        return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#2196F3" />
-                <Text>Loading subjects...</Text>
-            </View>
-        );
-    }
+    const handleGenerateVideo = async () => {
+        setLoading(true);
+        try {
+            const userId = await AsyncStorage.getItem('userId');
+            const token = await AsyncStorage.getItem('accessToken');
+            const problemTypeId = selectedProblemType?.id;
 
-    if (error) {
-        return (
-            <View style={styles.errorContainer}>
-                <Text style={styles.errorText}>{error}</Text>
-            </View>
-        );
-    }
+            if (!userId || !problemTypeId) {
+                throw new Error('User ID or Problem Type ID is missing.');
+            }
+
+            const inputString = inputValues.join(",");
+            const response = await fetch(
+                `https://mindmath.azurewebsites.net/api/problem-types/${problemTypeId}/users/${userId}/input-parameters`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({ input: inputString }),
+                }
+            );
+
+            if (!response.ok) throw new Error('Failed to submit inputs.');
+
+            const data = await response.json();
+            const inputParameterId = data.id;
+
+            await new Promise(resolve => setTimeout(resolve, 65000));
+
+            const solutionResponse = await fetch(
+                `https://mindmath.azurewebsites.net/api/solutions/${inputParameterId}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                }
+            );
+
+            if (!solutionResponse.ok) throw new Error('Failed to fetch solution.');
+
+            const solutionData = await solutionResponse.json();
+            setSelectedSolution(solutionData);
+            setIsModalVisible(true);
+
+        } catch (error) {
+            // Alert.alert("Error", error.message || 'Failed to generate video.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSolutionPress = (solution: Solution) => {
+        setSelectedSolution(solution);
+        setIsModalVisible(true); // Show the modal
+    };
+
+    const handleShowLink = (solutionLink: string) => {
+        Alert.alert('Video Link', solutionLink); // Displaying the video link in an alert
+    };
+
+    // Toggle the modal visibility
+    const toggleModal = () => {
+        setIsModalVisible(!isModalVisible);
+    };
+
+    // Handle input changes
+    const handleInputChange = (index: number, value: string) => {
+        const updatedInputs = [...inputValues];
+        updatedInputs[index] = value;
+        setInputValues(updatedInputs);
+    };
+
+    useEffect(() => {
+        fetchSubjects();
+    }, []);
 
     return (
-        <ScrollView style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>Math Solver AI</Text>
-            </View>
-            <Text style={styles.label}>Select Subject:</Text>
-            <RNPickerSelect
-                onValueChange={(value) => handleSubjectChange(value)}
-                items={filters.map((filter) => ({ label: filter.name, value: filter.id }))}
-                style={pickerSelectStyles}
-                placeholder={{ label: 'Select a subject', value: null }}
-                value={selectedSubject}
-            />
 
-            {selectedSubject && (
-                <View>
-                    <Text style={styles.label}>Select Chapter:</Text>
-                    {chapterLoading ? (
-                        <View style={styles.loadingContainer}>
-                            <ActivityIndicator size="small" color="#2196F3" />
-                            <Text>Loading chapters...</Text>
-                        </View>
-                    ) : chapterError ? (
-                        <View style={styles.errorContainer}>
-                            <Text style={styles.errorText}>{chapterError}</Text>
-                        </View>
-                    ) : (
-                        <RNPickerSelect
-                            onValueChange={(value) => handleChapterChange(value)}
-                            items={chapters.map((chapter) => ({ label: chapter.name, value: chapter.id }))}
-                            style={pickerSelectStyles}
-                            placeholder={{ label: 'Select a chapter', value: null }}
-                            value={selectedChapter}
-                        />
-                    )}
-                </View>
-            )}
+        <ScrollView contentContainerStyle={styles.container}>
+            <Text style={styles.titleMain}>Math AI Tool</Text>
+            <Text style={styles.title}>Subjects</Text>
 
-            {selectedChapter && (
-                <View>
-                    <Text style={styles.label}>Select Topic:</Text>
-                    {topicLoading ? (
-                        <View style={styles.loadingContainer}>
-                            <ActivityIndicator size="small" color="#2196F3" />
-                            <Text>Loading topics...</Text>
-                        </View>
-                    ) : topicError ? (
-                        <View style={styles.errorContainer}>
-                            <Text style={styles.errorText}>{topicError}</Text>
-                        </View>
-                    ) : (
-                        <RNPickerSelect
-                            onValueChange={(value) => handleTopicChange(value)}
-                            items={topics.map((topic) => ({ label: topic.name, value: topic.id }))}
-                            style={pickerSelectStyles}
-                            placeholder={{ label: 'Select a topic', value: null }}
-                            value={selectedTopic}
-                        />
-                    )}
-                </View>
-            )}
-
-            {selectedTopic && (
-                <View>
-                    <Text style={styles.label}>Select Problem Type:</Text>
-                    {problemTypeLoading ? (
-                        <View style={styles.loadingContainer}>
-                            <ActivityIndicator size="small" color="#2196F3" />
-                            <Text>Loading problem types...</Text>
-                        </View>
-                    ) : problemTypeError ? (
-                        <View style={styles.errorContainer}>
-                            <Text style={styles.errorText}>{problemTypeError}</Text>
-                        </View>
-                    ) : (
-                        <RNPickerSelect
-                            onValueChange={(value) => {
-                                console.log('Problem type selected:', value);
-                                setSelectedProblemType(value);
-                            }}
-                            items={problemTypes.map((problemType) => ({
-                                label: problemType.name,
-                                value: problemType.id,
-                            }))}
-                            style={pickerSelectStyles}
-                            placeholder={{ label: 'Select a problem type', value: null }}
-                        />
-                    )}
-                </View>
-            )}
-
-            {selectedProblemType && selectedProblemType.numberOfInputs > 0 && (
-                <View>
-                    <Text style={styles.label}>Input Parameters:</Text>
-
-                    {/* Generate input fields based on the numberOfInputs of the selected problem type */}
-                    {createInputs(selectedProblemType.numberOfInputs).map((inputField, index) => (
-                        <View key={index} style={styles.inputContainer}>
-                            <Text>Input {index + 1}</Text>
-                            <View style={styles.searchContainer}>
-                                {inputField}
-                            </View>
-                        </View>
+            {loading ? (
+                <ActivityIndicator size="large" color="#0000ff" />
+            ) : error ? (
+                <Text style={styles.errorText}>{error}</Text>
+            ) : (
+                <View style={styles.cardContainer}>
+                    {filters.map((item) => (
+                        <TouchableOpacity
+                            key={item.id}
+                            style={styles.card}
+                            onPress={() => fetchChapters(item.id)}
+                        >
+                            <Text style={styles.cardTitle}>{item.name}</Text>
+                        </TouchableOpacity>
                     ))}
                 </View>
             )}
 
-            <View style={styles.container}>
-                <TouchableOpacity
-                    style={styles.generateButton}
-                    onPress={handleGenerateVideo}
-                    disabled={loading}
-                >
-                    {loading ? (
-                        <View style={styles.loadingContainer}>
-                            <ActivityIndicator size="large" color="#fff" />
-                            <Text style={styles.generateButtonText}>Generating...</Text>
-                        </View>
-                    ) : (
-                        <Text style={styles.generateButtonText}>Generate Video</Text>
-                    )}
-                </TouchableOpacity>
-            </View>
-            {/* Modal for displaying the video */}
-            <Modal isVisible={isModalVisible} onBackdropPress={toggleModal}>
+            {chapterLoading ? (
+                <ActivityIndicator size="large" color="#0000ff" />
+            ) : chapterError ? (
+                <Text style={styles.errorText}>{chapterError}</Text>
+            ) : chapters.length > 0 && (
+                <>
+                    <Text style={styles.sectionTitle}>Chapters</Text>
+                    <View style={styles.cardContainer}>
+                        {chapters.map((item) => (
+                            <TouchableOpacity
+                                key={item.id}
+                                style={styles.card}
+                                onPress={() => fetchTopics(item.id)}
+                            >
+                                <Text style={styles.cardTitle}>{item.name}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </>
+            )}
+
+            {topicLoading ? (
+                <ActivityIndicator size="large" color="#0000ff" />
+            ) : topicError ? (
+                <Text style={styles.errorText}>{topicError}</Text>
+            ) : topics.length > 0 && (
+                <>
+                    <Text style={styles.sectionTitle}>Topics</Text>
+                    <View style={styles.cardContainer}>
+                        {topics.map((item) => (
+                            <TouchableOpacity
+                                key={item.id}
+                                style={styles.card}
+                                onPress={() => fetchProblemTypes(item.id)}
+                            >
+                                <Text style={styles.cardTitle}>{item.name}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </>
+            )}
+
+            {problemTypeLoading ? (
+                <ActivityIndicator size="large" color="#0000ff" />
+            ) : problemTypeError ? (
+                <Text style={styles.errorText}>{problemTypeError}</Text>
+            ) : problemTypes.length > 0 && (
+                <>
+                    <Text style={styles.sectionTitle}>Problem Types</Text>
+                    <View style={styles.cardContainer}>
+                        {problemTypes.map((item) => (
+                            <TouchableOpacity
+                                key={item.id}
+                                style={styles.card}
+                                onPress={() => {
+                                    setSelectedProblemType(item);
+                                    setInputValues(Array(item.numberOfInputs).fill('')); // Reset inputs
+                                }}
+                            >
+                                <Text style={styles.cardTitle}>{item.name}</Text>
+                                <Text style={styles.cardDescription}>{item.description}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </>
+            )}
+
+
+            {selectedProblemType && (
+                <>
+                    <Text style={styles.inputTitle}>Enter Inputs for: {selectedProblemType?.name}</Text>
+                    {inputValues.map((value, index) => (
+                        <TextInput
+                            key={index}
+                            style={styles.input}
+                            placeholder={`Input ${index + 1}`}
+                            value={value}
+                            onChangeText={(text) => handleInputChange(index, text)}
+                        />
+                    ))}
+
+                    <View style={styles.container}>
+                        <TouchableOpacity
+                            style={styles.generateButton}
+                            onPress={handleGenerateVideo}
+                            disabled={loading}
+                        >
+                            <Text style={styles.generateButtonText}>Generate Video</Text>
+                        </TouchableOpacity>
+
+                        {/* Full-screen loading overlay */}
+                        <Modal transparent visible={loading} animationType="fade">
+                            <View style={styles.loadingOverlay}>
+                                <ActivityIndicator size="large" color="#1A1A1D" />
+                                <Text style={styles.loadingText}>Generating ~ 65s...</Text>
+                            </View>
+                        </Modal>
+                    </View>
+                </>
+            )}
+
+            <Modal visible={isModalVisible} onRequestClose={() => setIsModalVisible(false)} animationType="slide">
                 <View style={styles.modalContent}>
-                    <Video
-                        source={{ uri: 'https://storage.googleapis.com/mindmath-56a26.appspot.com/videos/triangle_base_2.0_height_3.0_1730226181.mp4?Expires=1761762218&GoogleAccessId=firebase-adminsdk-gnrl1%40mindmath-56a26.iam.gserviceaccount.com&Signature=jqBW92HmSDwfKG1K1hB1LnEeY8NP22yyXi8Rm4L9kjYTtJ8c7Kk%2B9Pfwv%2BfAJWBFzRy8sSIAZ5k3FPbFoLnEX0ctj%2F5wJ2CzgRlpCZlECKadI9lS%2FSdI9zP1NVtJGZF2lDMu6uIwxvBK0sLI9Tf3C0%2FNTQflKP5eDketXSn%2FJEjyfoePzidSWP0ZztynoaxEFW2XMtZQCRt7vDlC8VSoiAsmJ7xRl2fCSv0YAt%2FHtl3tgQFOTPKUp9LLywto%2FJeIYt91nCGW%2FaCg5%2Bpa4RpT68TzLq9vuhd0vz7wNOucVmCrGCYkAx791S0bmGG9HXPdp88NFRnH68Ls6EWzNyq5Eg%3D%3D' }}
-                        rate={1.0}
-                        volume={1.0}
-                        isMuted={false}
-                        resizeMode={ResizeMode.COVER}
-                        shouldPlay
-                        style={styles.video}
-                    />
-                    <TouchableOpacity style={styles.closeButton} onPress={toggleModal}>
-                        <Text style={styles.closeButtonText}>Close</Text>
-                    </TouchableOpacity>
+                    {selectedSolution && (
+                        <>
+                            <Video
+                                source={{ uri: selectedSolution.link }}
+                                rate={1.0}
+                                volume={1.0}
+                                isMuted={false}
+                                resizeMode={ResizeMode.COVER}
+                                shouldPlay
+                                style={styles.video}
+                            />
+                            <TouchableOpacity style={styles.closeButton} onPress={() => setIsModalVisible(false)}>
+                                <Text style={styles.closeButtonText}>Close</Text>
+                            </TouchableOpacity>
+                        </>
+                    )}
                 </View>
             </Modal>
         </ScrollView>
@@ -465,121 +433,139 @@ const AITool: React.FC = () => {
 
 const styles = StyleSheet.create({
     container: {
+        flexGrow: 1,
+        padding: 20,
+        backgroundColor: '#f0f4f8', // Light gray background for a modern feel
+        marginVertical: 20,
+    },
+    container1: {
         flex: 1,
         backgroundColor: '#f9f9f9',
         padding: 20,
         marginTop: 20,
     },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        width: '90%',
-        paddingVertical: 16,
+    titleMain: {
+        textAlign: 'center',
+        fontSize: 28,
+        fontWeight: 'bold',
+        color: '#4CC9FE',
     },
-    headerTitle: {
+    title: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#000000',
+        color: '#333',
+        marginBottom: 15,
     },
-    label: {
-        fontSize: 16,
-        marginBottom: 10,
+    cardContainer: {
+        marginBottom: 15,
+        paddingHorizontal: 5,
+    },
+    card: {
+        padding: 15,
+        marginVertical: 8,
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 5,
+        alignItems: 'center', // Center text in cards
+    },
+    cardTitle: {
+        fontSize: 18,
         fontWeight: 'bold',
         color: '#333',
     },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
+    cardDescription: {
+        fontSize: 14,
+        color: '#666',
+        marginTop: 5,
     },
-    errorContainer: {
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    errorText: {
-        color: 'red',
-        fontSize: 18,
-    },
-    generateButton: {
-        backgroundColor: '#2196F3',
-        padding: 15,
-        borderRadius: 8,
-        justifyContent: 'center',
-        alignItems: 'center',
+    sectionTitle: {
+        fontSize: 20,
+        fontWeight: '600',
+        color: '#333',
         marginTop: 20,
-    },
-    generateButtonText: {
-        color: 'white',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    modalContent: {
-        backgroundColor: 'white',
-        borderRadius: 10,
-        padding: 10,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    video: {
-        width: 300,
-        height: 300,
-    },
-    closeButton: {
-        marginTop: 10,
-        backgroundColor: '#2196F3',
-        padding: 10,
-        borderRadius: 5,
-    },
-    closeButtonText: {
-        color: 'white',
-        fontSize: 16,
-    },
-    searchContainer: {
-        flexDirection: 'row',
-        marginBottom: 20,
-        backgroundColor: '#fff',
-        borderRadius: 8,
-        paddingHorizontal: 10,
-        elevation: 3,
-    },
-    searchInput: {
-        flex: 1,
-        fontSize: 16,
-        paddingVertical: 10,
+        marginBottom: 10,
     },
     inputContainer: {
-        marginBottom: 16,
+        marginTop: 20,
+    },
+    inputTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#555',
+        marginBottom: 10,
     },
     input: {
         borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 4,
-        padding: 10,
+        borderColor: '#ddd',
+        backgroundColor: '#fff',
+        padding: 12,
+        marginVertical: 5,
+        borderRadius: 8,
+        fontSize: 16,
+        color: '#333',
+    },
+    generateButton: {
+        backgroundColor: '#007bff',
+        padding: 15,
+        borderRadius: 10,
+        alignItems: 'center',
+        marginTop: 15,
+    },
+    loadingContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    generateButtonText: {
+        color: '#fff',
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    errorText: {
+        color: 'red',
+        fontSize: 16,
+        textAlign: 'center',
+        marginVertical: 10,
+    },
+    modalContent: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+        padding: 20,
+    },
+    video: {
+        width: '100%',
+        height: 250,
+        borderRadius: 10,
+    },
+    loadingOverlay: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#fff', // Light overlay background
+    },
+    loadingText: {
+        color: '#333',   // Dark text for contrast on white background
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginTop: 10,
+    },
+    closeButton: {
+        marginTop: 20,
+        padding: 12,
+        backgroundColor: '#007bff',
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    closeButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
 });
-
-const pickerSelectStyles = StyleSheet.create({
-    inputIOS: {
-        fontSize: 16,
-        paddingVertical: 12,
-        paddingHorizontal: 10,
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 8,
-        color: '#333',
-        paddingRight: 30,
-    },
-    inputAndroid: {
-        fontSize: 16,
-        paddingHorizontal: 10,
-        paddingVertical: 8,
-        borderWidth: 0.5,
-        borderColor: '#ccc',
-        borderRadius: 8,
-        color: '#333',
-        paddingRight: 30,
-    },
-});
-
-export default AITool;
+export default AiTool;

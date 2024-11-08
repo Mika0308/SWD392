@@ -368,11 +368,11 @@ const WalletScreen: React.FC = () => {
     const getStatusText = (status: 'Pending' | 'Success' | 'Failed') => {
         switch (status) {
             case 'Success':
-                return 'Thanh toán thành công';
+                return 'Payment successful';
             case 'Failed':
-                return 'Thanh toán thất bại';
+                return 'Payment failed';
             case 'Pending':
-                return 'Thanh toán đang được xử lý';
+                return 'Payment is being processed';
             default:
                 return '';
         }
@@ -413,7 +413,7 @@ const WalletScreen: React.FC = () => {
             </View>
 
             <TouchableOpacity style={styles.addFundsButton} onPress={() => setIsModalVisible(true)}>
-                <Text style={styles.addFundsText}>Nạp thêm tiền</Text>
+                <Text style={styles.addFundsText}>Purchase Now</Text>
             </TouchableOpacity>
 
             <Text style={styles.transactionsTitle}>Transaction History</Text>
@@ -427,14 +427,14 @@ const WalletScreen: React.FC = () => {
             <Modal transparent={true} visible={isModalVisible} animationType="slide" onRequestClose={() => setIsModalVisible(false)}>
                 <View style={styles.modalContainer}>
                     <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Chọn số tiền</Text>
+                        <Text style={styles.modalTitle}>Select Amount</Text>
                         {[10000, 50000, 100000, 500000].map((amount) => (
                             <TouchableOpacity key={amount} style={styles.coinOption} onPress={() => handleTopUp(amount)}>
                                 <Text>{amount} VND</Text>
                             </TouchableOpacity>
                         ))}
                         <TouchableOpacity onPress={() => setIsModalVisible(false)}>
-                            <Text style={styles.cancelText}>Hủy</Text>
+                            <Text style={styles.cancelText}>Cancel</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
