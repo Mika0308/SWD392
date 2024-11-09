@@ -44,7 +44,7 @@ if (getRNMinorVersion() >= 75) {
   }
 }
 
-rootProject.name = 'SWD392'
+rootProject.name = 'SWD_392'
 
 dependencyResolutionManagement {
   versionCatalogs {

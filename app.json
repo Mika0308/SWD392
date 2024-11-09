@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "SWD_392",
-    "slug": "SWD_392",
+    "slug": "mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -12,24 +12,25 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "."
-    },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.moynese.SWD_392"
+      "package": "com.duyhai0308.mobile", 
+      "runtimeVersion": "1.0.0"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "extra": {
       "eas": {
-        "projectId": "38ef2b8c-b333-48e0-aac6-cd61fae5b14c"
+        "projectId": "80417d47-7a22-426f-a295-1cae2c0a0a77"
       }
+    },
+    "owner": "duyhai0308",
+    "updates": {
+      "url": "https://u.expo.dev/80417d47-7a22-426f-a295-1cae2c0a0a77"
     }
   }
 }
