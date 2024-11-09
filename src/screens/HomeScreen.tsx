@@ -8,7 +8,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { fetchWalletData } from '../api/walletApi';
 import { AuthNavigationProp } from '../component/navigation/types';
-
+import { formatCurrency } from '../utils/formatCurrency';
 const HomeScreen: React.FC = () => {
     const [userName, setProfileName] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
@@ -113,7 +113,7 @@ const HomeScreen: React.FC = () => {
                             <TouchableOpacity onPress={() => navigation.navigate('Wallet')}>
                                 <MaterialIcons name="monetization-on" size={24} color="gold" />
                             </TouchableOpacity>
-                            <Text style={styles.statusText}>{balance} VND</Text>
+                            <Text style={styles.statusText}>{formatCurrency(balance)} VND</Text>
                         </View>
                         <Text style={styles.statusSubText}>balance</Text>
                     </View>
